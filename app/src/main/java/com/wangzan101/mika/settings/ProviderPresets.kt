@@ -71,6 +71,7 @@ object ProviderPresets {
         ProviderPreset("百度千帆", ProviderConfig.Kind.OpenAiCompat, "https://qianfan.baidubce.com/v2", caps(), familyTokens = listOf("ernie")),
         ProviderPreset("OpenRouter", ProviderConfig.Kind.OpenAiCompat, "https://openrouter.ai/api/v1", caps()),
         ProviderPreset("Requesty", ProviderConfig.Kind.OpenAiCompat, "https://router.requesty.ai/v1", caps()),
+        ProviderPreset("Opper", ProviderConfig.Kind.OpenAiCompat, "https://api.opper.ai/v3/compat", caps()),
         // 订阅制,一个 Key 用多家模型;各模型走哪种协议、哪个地址由模型列表逐个写明,这里的接口类型只是没写明时的退路。
         // 每个请求都要带对话的会话号,不带就拒绝(HTTP 400)
         ProviderPreset("OpenCode Go", ProviderConfig.Kind.OpenAiCompat, "https://opencode.ai/zen/go/v1", caps(), sessionHeader = "x-opencode-session"),

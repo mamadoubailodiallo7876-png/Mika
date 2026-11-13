@@ -92,4 +92,13 @@ class ProviderPresetsTest {
         assertEquals(emptyList<String>(), requesty.familyTokens)
         assertEquals("Requesty", ProviderPresets.forHost("https://router.requesty.ai/v1/")?.label)
     }
+
+    /** Opper 也是托管多家模型的 OpenAI 兼容网关:不给 familyTokens,地址认得出是它。 */
+    @Test fun opperIsAnOpenAiCompatGateway() {
+        val opper = preset("Opper")
+        assertEquals("https://api.opper.ai/v3/compat", opper.baseUrl)
+        assertEquals(ProviderConfig.Kind.OpenAiCompat, opper.kind)
+        assertEquals(emptyList<String>(), opper.familyTokens)
+        assertEquals("Opper", ProviderPresets.forHost("https://api.opper.ai/v3/compat/")?.label)
+    }
 }
