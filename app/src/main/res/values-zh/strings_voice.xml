@@ -61,4 +61,17 @@
     <string name="capsule_voice_not_ready">还不能语音输入 · 点这里</string>
     <string name="capsule_voice_service_need_mic">语音识别还不能录音 · 点这里</string>
     <string name="capsule_voice_open">打开 Mika</string>
+    <string name="speech_deepgram_missing">缺少 Deepgram 凭据，请在语音设置中重新配置。</string>
+    <string name="speech_deepgram_provider">Deepgram</string>
+    <string name="speech_deepgram_model">Deepgram 流式识别</string>
+    <string name="speech_deepgram_note">使用自定义 API Key 与接口地址进行流式识别</string>
+    <string name="speech_deepgram_configured">当前：%1$s</string>
+    <string name="speech_deepgram_base_url">接口地址</string>
+    <string name="speech_deepgram_api_key">API Key</string>
+    <string name="speech_deepgram_model_label">模型</string>
+    <string name="speech_deepgram_test_use">连接并使用</string>
+    <string name="speech_deepgram_remove">删除 Deepgram 配置</string>
+    <string name="speech_deepgram_url_invalid">请输入有效的 http://、https://、ws:// 或 wss:// 地址。</string>
+    <string name="speech_deepgram_model_invalid">请输入不含空格的有效 Deepgram 模型名。</string>
+    <string name="speech_deepgram_key_needed">请先输入 Deepgram API Key。</string>
 </resources>

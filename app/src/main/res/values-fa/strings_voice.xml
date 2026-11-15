@@ -62,4 +62,17 @@
     <string name="capsule_voice_not_ready">ورودی صوتی آماده نیست · بزنید</string>
     <string name="capsule_voice_service_need_mic">تشخیص گفتار هنوز نمی‌تواند ضبط کند · بزنید</string>
     <string name="capsule_voice_open">باز کردن میکا</string>
+    <string name="speech_deepgram_missing">اطلاعات احراز هویت Deepgram یافت نشد. لطفاً دوباره تنظیم کنید.</string>
+    <string name="speech_deepgram_provider">Deepgram</string>
+    <string name="speech_deepgram_model">تشخیص جریانی Deepgram</string>
+    <string name="speech_deepgram_note">تشخیص جریانی با کلید API و آدرس پایه دلخواه شما</string>
+    <string name="speech_deepgram_configured">در حال استفاده: %1$s</string>
+    <string name="speech_deepgram_base_url">آدرس پایه</string>
+    <string name="speech_deepgram_api_key">کلید API</string>
+    <string name="speech_deepgram_model_label">مدل</string>
+    <string name="speech_deepgram_test_use">اتصال و استفاده</string>
+    <string name="speech_deepgram_remove">حذف تنظیمات Deepgram</string>
+    <string name="speech_deepgram_url_invalid">یک نشانی معتبر http://، https://، ws:// یا wss:// وارد کنید.</string>
+    <string name="speech_deepgram_model_invalid">شناسه مدل معتبر Deepgram را بدون فاصله وارد کنید.</string>
+    <string name="speech_deepgram_key_needed">ابتدا کلید API سرویس Deepgram را وارد کنید.</string>
 </resources>

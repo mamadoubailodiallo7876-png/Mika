@@ -221,6 +221,7 @@ internal object VoiceCopy {
         is SpeechEngineSpec.Doubao -> tr(R.string.speech_doubao_model)
         is SpeechEngineSpec.FunAsr -> tr(R.string.speech_funasr_model)
         is SpeechEngineSpec.Bailian -> spec.model
+        is SpeechEngineSpec.Deepgram -> spec.model
         is SpeechEngineSpec.System -> tr(if (spec.onDevice) R.string.voice_engine_phone_offline else R.string.voice_engine_phone)
         is SpeechEngineSpec.Provider -> spec.model
         is SpeechEngineSpec.Unavailable -> ""
@@ -243,6 +244,7 @@ internal object VoiceCopy {
     fun unavailable(why: SpeechEngineSpec.Why): String = when (why) {
         SpeechEngineSpec.Why.DoubaoNotConfigured -> tr(R.string.speech_doubao_missing)
         SpeechEngineSpec.Why.BailianNotConfigured -> tr(R.string.speech_bailian_missing)
+        SpeechEngineSpec.Why.DeepgramNotConfigured -> tr(R.string.speech_deepgram_missing)
         SpeechEngineSpec.Why.NoSystemNoModel -> tr(R.string.voice_unavailable_no_engine)
         SpeechEngineSpec.Why.SystemGone -> tr(R.string.voice_unavailable_system_gone)
         SpeechEngineSpec.Why.SystemNoResponse -> tr(R.string.voice_unavailable_system_silent)

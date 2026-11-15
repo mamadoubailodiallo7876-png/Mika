@@ -37,6 +37,11 @@ object SpeechOptions {
                 tr(R.string.speech_bailian_provider) + " · " + tr(if (choice.region == BailianRegion.Singapore) R.string.speech_bailian_singapore else R.string.speech_bailian_beijing),
                 false,
             )
+            is SpeechChoice.Deepgram -> Summary(
+                choice.model,
+                tr(R.string.speech_deepgram_provider) + " · " + DeepgramProtocol.hostOf(choice.baseUrl),
+                false,
+            )
             SpeechChoice.Auto -> when {
                 system.usable -> systemSummary(system)
                 system.available -> silent
@@ -57,6 +62,7 @@ object SpeechOptions {
 
     /** 边说边转的服务在设置页里试连没通时的说法;不带服务端原话。 */
     fun probeFailure(e: Throwable): String = when {
+        e is ModelError.IllegalHeader -> tr(R.string.model_key_illegal_chars)
         e is ModelError.Auth || e is LiveAsrError && e.auth -> tr(R.string.speech_live_auth)
         e is LiveAsrError -> tr(R.string.speech_live_refused, e.code)
         e is ModelError.RateLimited -> tr(R.string.speech_live_refused, "429")

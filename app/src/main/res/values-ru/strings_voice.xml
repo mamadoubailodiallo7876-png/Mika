@@ -62,4 +62,17 @@
     <string name="capsule_voice_not_ready">Голосовой ввод не готов · нажмите</string>
     <string name="capsule_voice_service_need_mic">Распознавание речи пока не может записывать · нажмите</string>
     <string name="capsule_voice_open">Открыть Mika</string>
+    <string name="speech_deepgram_missing">Учетные данные Deepgram отсутствуют. Настройте Deepgram заново.</string>
+    <string name="speech_deepgram_provider">Deepgram</string>
+    <string name="speech_deepgram_model">Потоковое распознавание Deepgram</string>
+    <string name="speech_deepgram_note">Потоковое распознавание со своим API-ключом и базовым URL</string>
+    <string name="speech_deepgram_configured">Выбрано: %1$s</string>
+    <string name="speech_deepgram_base_url">Базовый URL</string>
+    <string name="speech_deepgram_api_key">API-ключ</string>
+    <string name="speech_deepgram_model_label">Модель</string>
+    <string name="speech_deepgram_test_use">Подключить и использовать</string>
+    <string name="speech_deepgram_remove">Удалить настройки Deepgram</string>
+    <string name="speech_deepgram_url_invalid">Введите корректный URL http://, https://, ws:// или wss://.</string>
+    <string name="speech_deepgram_model_invalid">Введите корректный идентификатор модели Deepgram без пробелов.</string>
+    <string name="speech_deepgram_key_needed">Сначала введите API-ключ Deepgram.</string>
 </resources>

@@ -62,4 +62,17 @@
     <string name="capsule_voice_not_ready">音声入力の準備ができていません · タップ</string>
     <string name="capsule_voice_service_need_mic">音声認識がまだ録音できません · タップ</string>
     <string name="capsule_voice_open">Mika を開く</string>
+    <string name="speech_deepgram_missing">Deepgram の認証情報がありません。音声設定から再設定してください。</string>
+    <string name="speech_deepgram_provider">Deepgram</string>
+    <string name="speech_deepgram_model">Deepgram ストリーミング認識</string>
+    <string name="speech_deepgram_note">独自の API キーとベース URL によるストリーミング認識</string>
+    <string name="speech_deepgram_configured">使用中: %1$s</string>
+    <string name="speech_deepgram_base_url">ベース URL</string>
+    <string name="speech_deepgram_api_key">API キー</string>
+    <string name="speech_deepgram_model_label">モデル</string>
+    <string name="speech_deepgram_test_use">接続して使用</string>
+    <string name="speech_deepgram_remove">Deepgram 設定を削除</string>
+    <string name="speech_deepgram_url_invalid">有効な http://、https://、ws://、または wss:// URL を入力してください。</string>
+    <string name="speech_deepgram_model_invalid">空白を含まない有効な Deepgram モデル ID を入力してください。</string>
+    <string name="speech_deepgram_key_needed">先に Deepgram API キーを入力してください。</string>
 </resources>

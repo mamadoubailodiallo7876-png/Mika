@@ -122,7 +122,7 @@ internal fun asrLanguageName(language: AsrLanguage): String = tr(
 /** 「识别语言」一组:一排可选的胶囊,默认自动。 */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-private fun LanguagePicker(selected: AsrLanguage, onSelect: (AsrLanguage) -> Unit) {
+internal fun LanguagePicker(selected: AsrLanguage, onSelect: (AsrLanguage) -> Unit) {
     GroupLabel(tr(R.string.speech_asr_language))
     androidx.compose.foundation.layout.FlowRow(
         Modifier.fillMaxWidth().testTag("speech-asr-language"),

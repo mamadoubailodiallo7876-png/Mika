@@ -62,4 +62,17 @@
     <string name="capsule_voice_not_ready">Voice input isn’t ready · tap</string>
     <string name="capsule_voice_service_need_mic">Speech recognition can’t record yet · tap</string>
     <string name="capsule_voice_open">Open Mika</string>
+    <string name="speech_deepgram_missing">Deepgram credentials are missing. Reconfigure Deepgram in speech settings.</string>
+    <string name="speech_deepgram_provider">Deepgram</string>
+    <string name="speech_deepgram_model">Deepgram streaming ASR</string>
+    <string name="speech_deepgram_note">Streaming recognition with your own API key and base URL</string>
+    <string name="speech_deepgram_configured">Using %1$s</string>
+    <string name="speech_deepgram_base_url">Base URL</string>
+    <string name="speech_deepgram_api_key">API key</string>
+    <string name="speech_deepgram_model_label">Model</string>
+    <string name="speech_deepgram_test_use">Connect &amp; use</string>
+    <string name="speech_deepgram_remove">Remove Deepgram configuration</string>
+    <string name="speech_deepgram_url_invalid">Enter a valid http://, https://, ws://, or wss:// URL.</string>
+    <string name="speech_deepgram_model_invalid">Enter a valid Deepgram model ID without spaces.</string>
+    <string name="speech_deepgram_key_needed">Enter a Deepgram API key first.</string>
 </resources>

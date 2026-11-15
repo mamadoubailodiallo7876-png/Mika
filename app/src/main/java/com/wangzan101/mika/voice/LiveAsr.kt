@@ -1,6 +1,7 @@
 package com.wangzan101.mika.voice
 
 import com.wangzan101.mika.core.model.ModelError
+import com.wangzan101.mika.core.model.headerOrReject
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -43,8 +44,14 @@ internal interface LiveAsrProtocol {
     /** 两包音频之间至少隔多少毫秒;0 表示来多少送多少(连上前攒下的音频尽快追上)。 */
     val packetGapMs: Long get() = 0
 
+    /** Whether [LiveSpeech] and [probeLiveAsr] must wait for [LiveAsrUpdate.Started] before streaming audio. */
+    val awaitsStartSignal: Boolean get() = true
+
     /** 读一条服务端消息(二进制消息按 UTF-8 文字读)。服务端报错时抛 [LiveAsrError]。 */
     fun read(message: String): LiveAsrUpdate
+
+    /** Optional final text fallback when the stream closes after [closing] without an explicit [LiveAsrUpdate.Ended]. */
+    fun onStreamClosed(lastText: LiveAsrUpdate.Text): String? = null
 }
 
 internal sealed interface LiveAsrUpdate {
@@ -77,7 +84,9 @@ internal class LiveAsrTransport(private val client: OkHttpClient = http) {
     suspend fun connect(url: String, headers: Map<String, String> = emptyMap()): LiveAsrSocket {
         val ready = CompletableDeferred<Unit>()
         val messages = Channel<String>(64)
-        val request = Request.Builder().url(url).apply { headers.forEach { (k, v) -> header(k, v) } }.build()
+        val request = Request.Builder().url(url).apply {
+            headers.forEach { (k, v) -> headerOrReject(k, v); header(k, v) }
+        }.build()
         val socket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) { ready.complete(Unit) }
             override fun onMessage(webSocket: WebSocket, text: String) { offer(webSocket, text) }
@@ -194,14 +203,16 @@ internal class LiveSpeech(
                 socket = connection
                 protocol.opening().forEach(connection::sendText)
                 var text = LiveAsrUpdate.Text("", "")
-                // 服务端确认前不送音频;这期间的录音留在录音器的队列里
-                withTimeout(connectTimeoutMs) {
-                    while (true) {
-                        when (val u = protocol.read(connection.incoming.receive())) {
-                            LiveAsrUpdate.Started -> break
-                            is LiveAsrUpdate.Text -> text = u
-                            is LiveAsrUpdate.Ended -> throw IOException("ASR ended before start")
-                            LiveAsrUpdate.None -> Unit
+                if (protocol.awaitsStartSignal) {
+                    // 服务端确认前不送音频;这期间的录音留在录音器的队列里
+                    withTimeout(connectTimeoutMs) {
+                        while (true) {
+                            when (val u = protocol.read(connection.incoming.receive())) {
+                                LiveAsrUpdate.Started -> break
+                                is LiveAsrUpdate.Text -> text = u
+                                is LiveAsrUpdate.Ended -> throw IOException("ASR ended before start")
+                                LiveAsrUpdate.None -> Unit
+                            }
                         }
                     }
                 }
@@ -217,6 +228,7 @@ internal class LiveSpeech(
                                 LiveAsrUpdate.Started, LiveAsrUpdate.None -> Unit
                             }
                         }
+                        protocol.onStreamClosed(text)?.let { return@async it.trim() }
                         throw IOException("ASR closed before final result")
                     }
                     val audioEnded = CompletableDeferred<Unit>()
@@ -301,6 +313,13 @@ internal suspend fun probeLiveAsr(protocol: LiveAsrProtocol, connect: suspend ()
         val socket = connect()
         try {
             protocol.opening().forEach(socket::sendText)
+            if (!protocol.awaitsStartSignal) {
+                protocol.closing().forEach(socket::sendText)
+                for (message in socket.incoming) {
+                    if (protocol.read(message) is LiveAsrUpdate.Ended) return@withTimeout
+                }
+                return@withTimeout
+            }
             for (message in socket.incoming) {
                 when (protocol.read(message)) {
                     LiveAsrUpdate.Started -> {

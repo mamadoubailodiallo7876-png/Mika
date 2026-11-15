@@ -55,6 +55,14 @@ class VoiceInput(
                     LiveAsrTransport().connect(spec.region.endpoint(spec.workspace), mapOf("Authorization" to "Bearer $key"))
                 })
             }
+            is SpeechEngineSpec.Deepgram -> {
+                val key = settings.deepgramKey()
+                    ?: return FailedSession(SpeechFailure.Unavailable(SpeechEngineSpec.Why.DeepgramNotConfigured))
+                val url = DeepgramProtocol.buildListenWsUrl(spec.baseUrl, spec.model, spec.language, tag)
+                LiveSpeech(PcmRecorder(streaming = true, unbounded = true), DeepgramAsrProtocol(), {
+                    LiveAsrTransport().connect(url, mapOf("Authorization" to "Token $key"))
+                })
+            }
             is SpeechEngineSpec.System -> {
                 val compatibility = SystemSpeech.serviceCompatibility()
                 SystemSpeechSession(

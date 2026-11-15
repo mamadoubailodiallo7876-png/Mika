@@ -172,6 +172,7 @@ object DiagnosticsCollector {
             is SpeechChoice.Doubao -> "doubao-asr-2.0 / ${c.resourceId}"
             is SpeechChoice.FunAsr -> "funasr-ws @ ${Diagnostics.host(c.url)}"
             is SpeechChoice.Bailian -> "bailian-asr / ${c.model} / ${c.region.name}" + if (c.workspace.isNotEmpty()) " / workspace" else ""
+            is SpeechChoice.Deepgram -> "deepgram-asr / ${c.model} @ ${Diagnostics.host(c.baseUrl)}"
             is SpeechChoice.Provider -> c.model + (app.providers.providers.value.firstOrNull { it.id == c.providerId }?.let { " @ ${Diagnostics.host(it.baseUrl)}" } ?: " (provider removed)")
         }
         DiagnosticsSnapshot.Speech(

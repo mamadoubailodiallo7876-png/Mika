@@ -62,4 +62,17 @@
     <string name="capsule_voice_not_ready">الإدخال الصوتي غير جاهز · انقر</string>
     <string name="capsule_voice_service_need_mic">التعرّف على الكلام لا يستطيع التسجيل بعد · انقر</string>
     <string name="capsule_voice_open">فتح Mika</string>
+    <string name="speech_deepgram_missing">بيانات اعتماد Deepgram مفقودة. أعد إعدادها في إعدادات الصوت.</string>
+    <string name="speech_deepgram_provider">Deepgram</string>
+    <string name="speech_deepgram_model">تعرّف Deepgram المتدفق</string>
+    <string name="speech_deepgram_note">تعرّف صوتي متدفق باستخدام مفتاح API وعنوان URL الخاص بك</string>
+    <string name="speech_deepgram_configured">المستخدم: %1$s</string>
+    <string name="speech_deepgram_base_url">عنوان URL الأساسي</string>
+    <string name="speech_deepgram_api_key">مفتاح API</string>
+    <string name="speech_deepgram_model_label">النموذج</string>
+    <string name="speech_deepgram_test_use">اتصال واستخدام</string>
+    <string name="speech_deepgram_remove">إزالة إعداد Deepgram</string>
+    <string name="speech_deepgram_url_invalid">أدخل عنوان http:// أو https:// أو ws:// أو wss:// صالحًا.</string>
+    <string name="speech_deepgram_model_invalid">أدخل معرف نموذج Deepgram صالحًا بدون مسافات.</string>
+    <string name="speech_deepgram_key_needed">أدخل مفتاح Deepgram API أولًا.</string>
 </resources>

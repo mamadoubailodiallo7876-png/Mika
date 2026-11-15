@@ -76,4 +76,12 @@ class SpeechOptionsTest {
     @Test fun offShowsNone() {
         assertEquals("不用", SpeechOptions.summary(SpeechChoice.Off, SystemCapability(true, true), emptyList()).title)
     }
+
+    @Test fun deepgramShowsModelAndProviderLabel() {
+        val choice = SpeechChoice.Deepgram(baseUrl = "https://api.deepgram.com", model = "nova-3", language = AsrLanguage.English)
+        val s = SpeechOptions.summary(choice, SystemCapability(true, true), emptyList())
+        assertEquals("nova-3", s.title)
+        assertEquals("Deepgram · api.deepgram.com", s.sub)
+        assertFalse(s.subOk)
+    }
 }

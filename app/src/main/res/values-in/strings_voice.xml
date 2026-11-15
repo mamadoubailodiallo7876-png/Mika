@@ -60,4 +60,17 @@
     <string name="capsule_voice_not_ready">Input suara belum siap · ketuk</string>
     <string name="capsule_voice_service_need_mic">Pengenalan ucapan belum bisa merekam · ketuk</string>
     <string name="capsule_voice_open">Buka Mika</string>
+    <string name="speech_deepgram_missing">Kredensial Deepgram tidak ditemukan. Konfigurasikan ulang di pengaturan suara.</string>
+    <string name="speech_deepgram_provider">Deepgram</string>
+    <string name="speech_deepgram_model">Pengenalan streaming Deepgram</string>
+    <string name="speech_deepgram_note">Pengenalan streaming dengan kunci API dan URL dasar Anda sendiri</string>
+    <string name="speech_deepgram_configured">Menggunakan %1$s</string>
+    <string name="speech_deepgram_base_url">URL dasar</string>
+    <string name="speech_deepgram_api_key">Kunci API</string>
+    <string name="speech_deepgram_model_label">Model</string>
+    <string name="speech_deepgram_test_use">Hubungkan &amp; gunakan</string>
+    <string name="speech_deepgram_remove">Hapus konfigurasi Deepgram</string>
+    <string name="speech_deepgram_url_invalid">Masukkan URL http://, https://, ws://, atau wss:// yang valid.</string>
+    <string name="speech_deepgram_model_invalid">Masukkan ID model Deepgram yang valid tanpa spasi.</string>
+    <string name="speech_deepgram_key_needed">Masukkan kunci API Deepgram terlebih dahulu.</string>
 </resources>

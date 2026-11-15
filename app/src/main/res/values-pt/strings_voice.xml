@@ -60,4 +60,17 @@
     <string name="capsule_voice_not_ready">A entrada por voz não está pronta · toque</string>
     <string name="capsule_voice_service_need_mic">O reconhecimento de fala ainda não pode gravar · toque</string>
     <string name="capsule_voice_open">Abrir o Mika</string>
+    <string name="speech_deepgram_missing">Credenciais da Deepgram ausentes. Reconfigure a Deepgram nas configurações de voz.</string>
+    <string name="speech_deepgram_provider">Deepgram</string>
+    <string name="speech_deepgram_model">Deepgram em streaming</string>
+    <string name="speech_deepgram_note">Reconhecimento em streaming com sua própria chave API e URL base</string>
+    <string name="speech_deepgram_configured">Usando %1$s</string>
+    <string name="speech_deepgram_base_url">URL base</string>
+    <string name="speech_deepgram_api_key">Chave de API</string>
+    <string name="speech_deepgram_model_label">Modelo</string>
+    <string name="speech_deepgram_test_use">Conectar e usar</string>
+    <string name="speech_deepgram_remove">Remover configuração Deepgram</string>
+    <string name="speech_deepgram_url_invalid">Insira uma URL http://, https://, ws:// ou wss:// válida.</string>
+    <string name="speech_deepgram_model_invalid">Insira um ID de modelo Deepgram válido sem espaços.</string>
+    <string name="speech_deepgram_key_needed">Insira primeiro uma chave de API Deepgram.</string>
 </resources>

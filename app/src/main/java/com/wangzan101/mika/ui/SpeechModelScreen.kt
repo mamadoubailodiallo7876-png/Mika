@@ -43,9 +43,13 @@ import com.wangzan101.mika.ui.components.StatusPill
 import com.wangzan101.mika.ui.components.InputRow
 import com.wangzan101.mika.ui.components.MikaButton
 import com.wangzan101.mika.ui.theme.MikaTheme
+import androidx.compose.ui.text.input.KeyboardType
+import com.wangzan101.mika.voice.AsrLanguage
 import com.wangzan101.mika.voice.SpeechChoice
 import com.wangzan101.mika.voice.SpeechOptions
 import com.wangzan101.mika.voice.SystemSpeech
+import com.wangzan101.mika.voice.DeepgramAsrProtocol
+import com.wangzan101.mika.voice.DeepgramProtocol
 import com.wangzan101.mika.voice.DoubaoCredentials
 import com.wangzan101.mika.voice.DoubaoProtocol
 import com.wangzan101.mika.voice.BailianProtocol
@@ -75,6 +79,10 @@ class SpeechPickActions(
     val openFunAsr: () -> Unit = {},
     /** 沿用上次那种(自建的地址,或百炼某个地域的模型),当场选用。 */
     val useFunAsr: () -> Unit = {},
+    /** Open configurable Deepgram STT setup page. */
+    val openDeepgram: () -> Unit = {},
+    /** Use previously saved Deepgram STT configuration directly. */
+    val useDeepgram: () -> Unit = {},
 )
 
 /**
@@ -100,6 +108,8 @@ fun SpeechModelScreen(store: ProviderStore, onBack: () -> Unit) {
     var funAsrSaved by remember { mutableStateOf(funAsrSaved()) }
     var funAsrLast by remember { mutableStateOf(settings?.lastLive) }
     var funAsrOpen by remember { mutableStateOf(false) }
+    var deepgramConfigured by remember { mutableStateOf(settings?.hasDeepgramKey == true) }
+    var deepgramOpen by remember { mutableStateOf(false) }
     var liveProbe by remember { mutableStateOf(LiveProbeUi()) }
     // 先连一次走一遍开场和收尾,通了才存;失败留在设置页上说原因
     fun probeThen(protocol: com.wangzan101.mika.voice.LiveAsrProtocol, url: String, headers: Map<String, String>, save: () -> Unit) {
@@ -154,6 +164,17 @@ fun SpeechModelScreen(store: ProviderStore, onBack: () -> Unit) {
                 else -> { liveProbe = LiveProbeUi(); funAsrOpen = true }
             }
         },
+        openDeepgram = { liveProbe = LiveProbeUi(); deepgramOpen = true },
+        useDeepgram = {
+            val saved = settings?.takeIf { it.hasDeepgramKey }
+            if (saved != null) {
+                saved.saveDeepgram("", SpeechChoice.Deepgram(saved.deepgramBaseUrl, saved.deepgramModel, saved.deepgramLanguage))
+                vm.pickSpeech(saved.choice.value)
+            } else {
+                liveProbe = LiveProbeUi()
+                deepgramOpen = true
+            }
+        },
     )
     fun funAsrDone() {
         funAsrSaved = funAsrSaved(); funAsrLast = settings?.lastLive
@@ -186,7 +207,44 @@ fun SpeechModelScreen(store: ProviderStore, onBack: () -> Unit) {
                 onClearBailian = { region -> settings?.clearBailian(region); funAsrDone() },
             ) { funAsrOpen = false }
         }
-        else -> SpeechModelContent(ui, probe, actions, onBack, doubaoConfigured, funAsrLast != null)
+        deepgramOpen -> {
+            BackHandler { deepgramOpen = false }
+            DeepgramSetupPage(
+                configured = deepgramConfigured,
+                savedBaseUrl = settings?.deepgramBaseUrl ?: DeepgramProtocol.DEFAULT_BASE_URL,
+                savedModel = settings?.deepgramModel ?: DeepgramProtocol.DEFAULT_STT_MODEL,
+                savedLanguage = settings?.deepgramLanguage ?: AsrLanguage.Auto,
+                probe = liveProbe,
+                onSave = { key, baseUrl, model, language ->
+                    val usable = key.ifBlank { settings?.deepgramKey().orEmpty() }
+                    val cleanUrl = DeepgramProtocol.normalizeBaseUrl(baseUrl)
+                    val cleanModel = model.trim()
+                    when {
+                        usable.isBlank() -> liveProbe = LiveProbeUi(error = tr(R.string.speech_deepgram_key_needed))
+                        cleanUrl == null -> liveProbe = LiveProbeUi(error = tr(R.string.speech_deepgram_url_invalid))
+                        !DeepgramProtocol.validModel(cleanModel) -> liveProbe = LiveProbeUi(error = tr(R.string.speech_deepgram_model_invalid))
+                        else -> probeThen(
+                            DeepgramAsrProtocol(),
+                            DeepgramProtocol.buildListenWsUrl(cleanUrl, cleanModel, language),
+                            mapOf("Authorization" to "Token $usable"),
+                        ) {
+                            checkNotNull(settings).saveDeepgram(key, SpeechChoice.Deepgram(cleanUrl, cleanModel, language))
+                            deepgramConfigured = true
+                            vm.pickSpeech(settings.choice.value)
+                            deepgramOpen = false
+                        }
+                    }
+                },
+                onClear = {
+                    settings?.clearDeepgram()
+                    deepgramConfigured = false
+                    settings?.let { vm.pickSpeech(it.choice.value) }
+                    deepgramOpen = false
+                },
+                onBack = { deepgramOpen = false },
+            )
+        }
+        else -> SpeechModelContent(ui, probe, actions, onBack, doubaoConfigured, funAsrLast != null, deepgramConfigured)
     }
 }
 
@@ -195,7 +253,7 @@ fun SpeechModelScreen(store: ProviderStore, onBack: () -> Unit) {
 @Composable
 fun SpeechModelContent(
     ui: ModelSetupUi, probe: Map<String, String>, actions: SpeechPickActions, onBack: () -> Unit, doubaoConfigured: Boolean = false,
-    funAsrConfigured: Boolean = false,
+    funAsrConfigured: Boolean = false, deepgramConfigured: Boolean = false,
 ) {
     val c = MikaTheme.colors
     val system = ui.systemSpeech
@@ -232,7 +290,7 @@ fun SpeechModelContent(
                 subtitle = tr(R.string.speech_off_note),
             )
         }
-        LiveRows(choice, doubaoConfigured, funAsrConfigured, actions)
+        LiveRows(choice, doubaoConfigured, funAsrConfigured, deepgramConfigured, actions)
         SpeechOptions.groups(ui.providers).forEach { g ->
             val p = g.provider
             val testing = ui.speechTesting == p.id
@@ -274,7 +332,13 @@ fun SpeechModelContent(
  * 凭据和聊天服务商分开存,不列模型、不试转。
  */
 @Composable
-private fun LiveRows(choice: SpeechChoice, doubao: Boolean, funAsr: Boolean, actions: SpeechPickActions) {
+private fun LiveRows(
+    choice: SpeechChoice,
+    doubao: Boolean,
+    funAsr: Boolean,
+    deepgram: Boolean,
+    actions: SpeechPickActions,
+) {
     GroupLabel(tr(R.string.speech_doubao_group))
     GroupCard {
         val plan = (choice as? SpeechChoice.Doubao)?.resourceId ?: DoubaoProtocol.DURATION
@@ -294,6 +358,18 @@ private fun LiveRows(choice: SpeechChoice, doubao: Boolean, funAsr: Boolean, act
             tr(R.string.speech_funasr_service), using ?: tr(R.string.speech_funasr_choose_note),
             selected = using != null, configured = funAsr, first = false, tag = "speech-funasr-edit",
             onPick = actions.useFunAsr, onOpen = actions.openFunAsr,
+        )
+        val deepgramChoice = choice as? SpeechChoice.Deepgram
+        LiveServiceRow(
+            tr(R.string.speech_deepgram_model),
+            if (deepgramChoice != null) tr(R.string.speech_deepgram_configured, deepgramChoice.model)
+            else tr(R.string.speech_deepgram_note),
+            selected = deepgram && deepgramChoice != null,
+            configured = deepgram,
+            first = false,
+            tag = "speech-deepgram-edit",
+            onPick = actions.useDeepgram,
+            onOpen = actions.openDeepgram,
         )
     }
 }
@@ -364,6 +440,100 @@ fun DoubaoSetupPage(choice: SpeechChoice, configured: Boolean, actions: SpeechPi
                     Modifier.clip(MikaShapes.Pill).clickable(onClick = actions.clearDoubao).padding(horizontal = 16.dp, vertical = 12.dp)
                         .testTag("speech-doubao-remove"),
                     style = MikaType.Body, color = c.bad,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Configurable Deepgram STT setup page: supports cloud or self-hosted Deepgram endpoints,
+ * model selection, language selection, Keystore-encrypted API key storage, and live WS probe.
+ */
+@Composable
+fun DeepgramSetupPage(
+    configured: Boolean,
+    savedBaseUrl: String,
+    savedModel: String,
+    savedLanguage: AsrLanguage,
+    probe: LiveProbeUi,
+    onSave: (key: String, baseUrl: String, model: String, language: AsrLanguage) -> Unit,
+    onClear: () -> Unit,
+    onBack: () -> Unit,
+) {
+    val c = MikaTheme.colors
+    var baseUrl by remember { mutableStateOf(savedBaseUrl) }
+    var key by remember { mutableStateOf("") }
+    var model by remember { mutableStateOf(savedModel) }
+    var language by remember { mutableStateOf(savedLanguage) }
+    val normalizedUrl = DeepgramProtocol.normalizeBaseUrl(baseUrl)
+    val modelValid = DeepgramProtocol.validModel(model)
+    Page(tr(R.string.speech_deepgram_model), onBack) {
+        Text(
+            tr(R.string.speech_deepgram_note),
+            Modifier.padding(top = 4.dp, bottom = 4.dp),
+            fontSize = 14.5.sp,
+            lineHeight = 22.sp,
+            color = c.ink2,
+        )
+        GroupLabel(tr(R.string.speech_doubao_credentials))
+        GroupCard {
+            InputRow(
+                tr(R.string.speech_deepgram_base_url),
+                baseUrl,
+                { baseUrl = it },
+                DeepgramProtocol.DEFAULT_BASE_URL,
+                first = true,
+                keyboard = KeyboardType.Uri,
+                labelWidth = 110.dp,
+                modifier = Modifier.testTag("speech-deepgram-url"),
+            )
+            InputRow(
+                tr(R.string.speech_deepgram_api_key),
+                key,
+                { key = it },
+                tr(if (configured) R.string.speech_bailian_keep_key else R.string.speech_bailian_enter_key),
+                secret = true,
+                labelWidth = 110.dp,
+                modifier = Modifier.testTag("speech-deepgram-key"),
+            )
+        }
+        if (baseUrl.isNotBlank() && normalizedUrl == null) {
+            FooterNote(tr(R.string.speech_deepgram_url_invalid), Modifier.padding(top = 8.dp), color = c.bad)
+        }
+        GroupLabel(tr(R.string.speech_deepgram_model_label))
+        GroupCard {
+            val listed = DeepgramProtocol.STT_MODELS
+            listed.forEachIndexed { index, id ->
+                RadioRow(id, selected = model == id, first = index == 0, onClick = { model = id }, titleStyle = ModelIdStyle)
+            }
+            InputRow(
+                tr(R.string.speech_bailian_other_model),
+                if (model in listed) "" else model,
+                { model = it.trim().ifEmpty { DeepgramProtocol.DEFAULT_STT_MODEL } },
+                DeepgramProtocol.DEFAULT_STT_MODEL,
+                labelWidth = 110.dp,
+            )
+        }
+        LanguagePicker(language) { language = it }
+        FooterNote(tr(R.string.speech_bailian_privacy), Modifier.padding(top = 8.dp))
+        MikaButton(
+            tr(if (probe.testing) R.string.speech_live_testing else R.string.speech_deepgram_test_use),
+            onClick = { onSave(key.trim(), baseUrl.trim(), model.trim(), language); key = "" },
+            Modifier.fillMaxWidth().padding(top = 8.dp).testTag("speech-deepgram-save"),
+            enabled = !probe.testing && normalizedUrl != null && modelValid && (key.isNotBlank() || configured),
+        )
+        probe.error?.let {
+            FooterNote(it, Modifier.padding(top = 8.dp).testTag("speech-live-failed"), color = c.bad)
+        }
+        if (configured) {
+            Box(Modifier.fillMaxWidth().padding(top = 6.dp), contentAlignment = Alignment.Center) {
+                Text(
+                    tr(R.string.speech_deepgram_remove),
+                    Modifier.clip(MikaShapes.Pill).clickable(onClick = onClear).padding(horizontal = 16.dp, vertical = 12.dp)
+                        .testTag("speech-deepgram-remove"),
+                    style = MikaType.Body,
+                    color = c.bad,
                 )
             }
         }

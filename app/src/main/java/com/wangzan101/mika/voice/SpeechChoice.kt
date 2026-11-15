@@ -47,6 +47,13 @@ sealed interface SpeechChoice {
         val workspace: String = "",
         val language: AsrLanguage = AsrLanguage.Auto,
     ) : SpeechChoice
+
+    /** Deepgram streaming STT; API key is stored separately with Keystore encryption. */
+    data class Deepgram(
+        val baseUrl: String = DeepgramProtocol.DEFAULT_BASE_URL,
+        val model: String = DeepgramProtocol.DEFAULT_STT_MODEL,
+        val language: AsrLanguage = AsrLanguage.Auto,
+    ) : SpeechChoice
 }
 
 /**
@@ -153,6 +160,55 @@ class SpeechSettings(private val prefs: SharedPreferences, private val cipher: K
         if ((_choice.value as? SpeechChoice.Bailian)?.region == region) set(SpeechChoice.Off)
     }
 
+    val hasDeepgramKey: Boolean get() = prefs.contains(DEEPGRAM_KEY)
+
+    val deepgramBaseUrl: String
+        get() = prefs.getString(DEEPGRAM_BASE_URL, null)
+            ?.let(DeepgramProtocol::normalizeBaseUrl)
+            ?: DeepgramProtocol.DEFAULT_BASE_URL
+
+    val deepgramModel: String
+        get() = prefs.getString(DEEPGRAM_MODEL, null)
+            ?.takeIf(DeepgramProtocol::validModel)
+            ?: DeepgramProtocol.DEFAULT_STT_MODEL
+
+    val deepgramLanguage: AsrLanguage
+        get() = AsrLanguage.of(prefs.getString(DEEPGRAM_LANGUAGE, null))
+
+    internal fun saveDeepgram(apiKey: String, choice: SpeechChoice.Deepgram) {
+        val cleanUrl = requireNotNull(DeepgramProtocol.normalizeBaseUrl(choice.baseUrl))
+        val cleanModel = choice.model.trim().also { require(DeepgramProtocol.validModel(it)) }
+        val cleanChoice = SpeechChoice.Deepgram(cleanUrl, cleanModel, choice.language)
+        val edit = prefs.edit()
+        if (apiKey.isNotBlank()) {
+            val encrypted = Base64.getEncoder().encodeToString(cipher.encrypt(apiKey.trim().toByteArray(Charsets.UTF_8)))
+            edit.putString(DEEPGRAM_KEY, encrypted)
+        } else {
+            require(hasDeepgramKey)
+        }
+        edit.putString(DEEPGRAM_BASE_URL, cleanUrl)
+            .putString(DEEPGRAM_MODEL, cleanModel)
+            .putString(DEEPGRAM_LANGUAGE, cleanChoice.language.code)
+            .putString(KEY, encode(cleanChoice).toString())
+            .apply()
+        _choice.value = cleanChoice
+    }
+
+    internal fun deepgramKey(): String? = runCatching {
+        val encrypted = prefs.getString(DEEPGRAM_KEY, null) ?: return null
+        String(cipher.decrypt(Base64.getDecoder().decode(encrypted)), Charsets.UTF_8).takeIf(String::isNotBlank)
+    }.getOrNull()
+
+    fun clearDeepgram() {
+        prefs.edit()
+            .remove(DEEPGRAM_KEY)
+            .remove(DEEPGRAM_BASE_URL)
+            .remove(DEEPGRAM_MODEL)
+            .remove(DEEPGRAM_LANGUAGE)
+            .apply()
+        if (_choice.value is SpeechChoice.Deepgram) set(SpeechChoice.Off)
+    }
+
     /**
      * 「Fun-ASR 实时语音识别」一行上次选用的是哪种(自建或百炼的某个地域),点圆圈时沿用它;
      * 那种已经用不了(地址读不出、Key 删了)或从没选过时为 null,界面改去设置页。
@@ -236,6 +292,12 @@ class SpeechSettings(private val prefs: SharedPreferences, private val cipher: K
                 if (choice.workspace.isNotEmpty()) put("workspace", JsonPrimitive(choice.workspace))
                 if (choice.language != AsrLanguage.Auto) put("language", JsonPrimitive(choice.language.code))
             }
+            is SpeechChoice.Deepgram -> {
+                put(TYPE, JsonPrimitive("deepgram"))
+                put("baseUrl", JsonPrimitive(choice.baseUrl))
+                put("model", JsonPrimitive(choice.model))
+                if (choice.language != AsrLanguage.Auto) put("language", JsonPrimitive(choice.language.code))
+            }
             is SpeechChoice.Provider -> {
                 put(TYPE, JsonPrimitive("provider"))
                 put("providerId", JsonPrimitive(choice.providerId))
@@ -261,6 +323,14 @@ class SpeechSettings(private val prefs: SharedPreferences, private val cipher: K
             val language = AsrLanguage.of(obj["language"]?.jsonPrimitive?.contentOrNull)
             if (model == null || region == null || workspace == null) null else SpeechChoice.Bailian(model, region, workspace, language)
         }
+        "deepgram" -> {
+            val baseUrl = obj["baseUrl"]?.jsonPrimitive?.contentOrNull?.let(DeepgramProtocol::normalizeBaseUrl)
+                ?: DeepgramProtocol.DEFAULT_BASE_URL
+            val model = obj["model"]?.jsonPrimitive?.contentOrNull?.takeIf(DeepgramProtocol::validModel)
+                ?: DeepgramProtocol.DEFAULT_STT_MODEL
+            val language = AsrLanguage.of(obj["language"]?.jsonPrimitive?.contentOrNull)
+            SpeechChoice.Deepgram(baseUrl, model, language)
+        }
         "provider" -> {
             val id = obj["providerId"]?.jsonPrimitive?.contentOrNull
             val model = obj["model"]?.jsonPrimitive?.contentOrNull
@@ -280,6 +350,10 @@ class SpeechSettings(private val prefs: SharedPreferences, private val cipher: K
         private fun bailianModelName(region: BailianRegion) = "speech_bailian_model_${region.name.lowercase()}"
         private fun bailianWorkspaceName(region: BailianRegion) = "speech_bailian_workspace_${region.name.lowercase()}"
         private fun bailianLanguageName(region: BailianRegion) = "speech_bailian_language_${region.name.lowercase()}"
+        private const val DEEPGRAM_KEY = "speech_deepgram_key_encrypted"
+        private const val DEEPGRAM_BASE_URL = "speech_deepgram_base_url"
+        private const val DEEPGRAM_MODEL = "speech_deepgram_model"
+        private const val DEEPGRAM_LANGUAGE = "speech_deepgram_language"
         private const val FUNASR_LANGUAGE = "speech_funasr_language"
         private const val TYPE = "type"
         private const val SILENT = "speech_system_silent"

@@ -60,4 +60,17 @@
     <string name="capsule_voice_not_ready">음성 입력이 준비되지 않았어요 · 누르기</string>
     <string name="capsule_voice_service_need_mic">음성 인식이 아직 녹음할 수 없어요 · 누르기</string>
     <string name="capsule_voice_open">Mika 열기</string>
+    <string name="speech_deepgram_missing">Deepgram 인증 정보가 없습니다. 음성 설정에서 다시 구성하세요.</string>
+    <string name="speech_deepgram_provider">Deepgram</string>
+    <string name="speech_deepgram_model">Deepgram 실시간 인식</string>
+    <string name="speech_deepgram_note">개인 API 키와 기본 URL을 사용한 스트리밍 음성 인식</string>
+    <string name="speech_deepgram_configured">사용 중: %1$s</string>
+    <string name="speech_deepgram_base_url">기본 URL</string>
+    <string name="speech_deepgram_api_key">API 키</string>
+    <string name="speech_deepgram_model_label">모델</string>
+    <string name="speech_deepgram_test_use">연결 및 사용</string>
+    <string name="speech_deepgram_remove">Deepgram 구성 삭제</string>
+    <string name="speech_deepgram_url_invalid">올바른 http://, https://, ws:// 또는 wss:// URL을 입력하세요.</string>
+    <string name="speech_deepgram_model_invalid">공백 없는 유효한 Deepgram 모델 ID를 입력하세요.</string>
+    <string name="speech_deepgram_key_needed">먼저 Deepgram API 키를 입력하세요.</string>
 </resources>
