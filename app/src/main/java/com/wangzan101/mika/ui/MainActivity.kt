@@ -481,6 +481,7 @@ private fun MikaRoot(
                 conversationTitle = { ConversationStore.shared(context).title(it) },
                 search = ConversationStore.shared(context).search,
                 onPlans = { nav.pushFromDrawer(Route.Plans) },
+                onCareer = { nav.pushFromDrawer(Route.Career) },
                 onMemory = { nav.pushFromDrawer(Route.Memory) },
                 onSettings = { nav.pushFromDrawer(Route.Settings) },
                 onBrowser = { nav.pushFromDrawer(Route.Browser) },
@@ -652,6 +653,7 @@ private fun MikaRoot(
             app.chat.openConversation(it)
             nav.reset()
         })
+        Route.Career -> CareerScreen(context, onBack = back)
         Route.Teach -> TeachScreen(
             app.teach,
             onBack = { nav.back() },

@@ -26,7 +26,7 @@ internal class RunAssembler(private val providers: List<CapabilityProvider>) {
         val child = spec.provenance.origin == RunOrigin.Child
         val readOnly = spec.readOnly || child
         val capabilities = providers.filter { (spec.capabilities == null || it.id in spec.capabilities) &&
-            (!child || it.id in setOf("web", "sandbox")) }
+            (!child || it.id in setOf("web", "sandbox", "career")) }
             .mapNotNull { it.open(spec) }
         val general = GeneralGroup.tools.filterNot { (spec.readOnly || child) && it.verb == Verb.MemoryEdit }
             .filterNot { spec.provenance.attendance == Attendance.Unattended &&

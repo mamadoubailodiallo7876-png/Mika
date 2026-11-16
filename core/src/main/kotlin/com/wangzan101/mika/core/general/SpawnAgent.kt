@@ -56,7 +56,7 @@ internal object SpawnAgent : AgentTool {
         val limit = (a.int("maxResultChars", Int.MIN_VALUE, Int.MAX_VALUE) ?: DEFAULT_RESULT_CHARS).coerceIn(MIN_RESULT_CHARS, MAX_RESULT_CHARS)
         val child = RunSpec(RunId(UUID.randomUUID().toString()), goal, parent.threadId,
             provenance = RunProvenance(RunOrigin.Child, Attendance.Unattended),
-            capabilities = setOf("web", "sandbox"), readOnly = true, parent = parent.id, stepBudget = steps)
+            capabilities = setOf("web", "sandbox", "career"), readOnly = true, parent = parent.id, stepBudget = steps)
         val result = host.spawn(child, format)
         val text = result.text.take(limit)
         return ToolExecution(buildJsonObject {

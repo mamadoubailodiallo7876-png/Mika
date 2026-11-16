@@ -122,6 +122,8 @@ fun toolDispatcher(
     root: RootPort? = null,
     /** 用户配置并启用的通用网页搜索;为空时保持原有浏览器搜索路径。 */
     webSearch: com.wangzan101.mika.core.search.WebSearch? = null,
+    /** On-device career data; when present the career capability and its tools are available. */
+    career: com.wangzan101.mika.core.career.CareerStore? = null,
 ): ToolDispatcher {
     val screenshotStore = sandbox?.takeIf {
         it.status() !is com.wangzan101.mika.core.cap.sandbox.SandboxStatus.Unsupported &&
@@ -149,6 +151,11 @@ fun toolDispatcher(
         object : CapabilityProvider {
             override val id = RootCapability.KEY.name
             override fun open(spec: RunSpec) = RootCapability(port)
+        }
+    }) + listOfNotNull(career?.let { store ->
+        object : CapabilityProvider {
+            override val id = com.wangzan101.mika.core.cap.career.CAREER_CAPABILITY
+            override fun open(spec: RunSpec) = com.wangzan101.mika.core.cap.career.CareerCapability(store)
         }
     }) + mcpServers.map(::McpClientProvider)
     return RunAssembler(providers).assemble(runSpec, config, stableRefs, FORMER_PREFIX, RENAMED, RETIRED, MOVED)
@@ -202,4 +209,5 @@ internal fun allTools(): List<AgentTool> =
 fun knownTools(): ToolIndex = ToolIndex(allTools())
 
 /** Mika 所有可能提供的工具名(技能文档里提到的工具名据此校验)。 */
-fun knownToolNames(): Set<String> = knownTools().names + DO_STEPS_TOOL
+fun knownToolNames(): Set<String> = knownTools().names + DO_STEPS_TOOL +
+    com.wangzan101.mika.core.cap.career.CareerTools.names

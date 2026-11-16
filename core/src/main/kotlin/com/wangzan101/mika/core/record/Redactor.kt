@@ -76,6 +76,7 @@ object Redactor {
         } ?: content
         Verb.HandToUser -> if ("userNote" in content) JsonObject(content + ("userNote" to JsonPrimitive(MASK))) else content
         Verb.PhoneCommand -> if ("output" in content) JsonObject(content + ("output" to JsonPrimitive(MASK))) else content
+        Verb.CareerRead, Verb.CareerWrite -> maskCareer(content)
         else -> content
     }
 
@@ -92,6 +93,15 @@ object Redactor {
     /** 模板字符串里的 ${…}:表达式不是字面量,位置留着,前后的字打码。 */
     private val TEMPLATE_HOLE = Regex("""\$\{[^}]*\}""")
     private val MEMORY_ARGS = setOf("content", "quote", "keywords")
+
+    /**
+     * Career records may contain contact details and whole documents. Run records keep ids,
+     * statuses and counts, but not the free text or contact values.
+     */
+    private fun maskCareer(content: JsonObject): JsonObject {
+        val hidden = setOf("email", "phone", "content", "summary", "confirmationText", "evidenceText", "text", "profile", "draft", "coverLetter")
+        return JsonObject(content.mapValues { (k, v) -> if (k in hidden) JsonPrimitive(MASK) else v })
+    }
 
     /** 一次性码一类的词。 */
     private val CODE_WORD = Regex("""验证|校验码|动态码|动态密码|确认码|安全码|短信|口令|(?i:\b(?:code|otp|passcode|pin|2fa)\b)""")

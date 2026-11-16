@@ -223,6 +223,17 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
     /** 对话记录:整个进程一份,任务服务、聊天界面、结果卡片的按钮共用。 */
     val conversations: ConversationStore by lazy { ConversationStore(this) }
 
+    /**
+     * Career data is device-local and encrypted with a Keystore key. Tasks and the Career screen
+     * share this one store; exports stay in its app-private folder and are never uploaded.
+     */
+    val career: com.wangzan101.mika.core.career.CareerStore by lazy {
+        com.wangzan101.mika.core.career.CareerStore(
+            java.io.File(filesDir, "career"),
+            com.wangzan101.mika.career.KeystoreCareerCodec(com.wangzan101.mika.settings.KeystoreKeyCipher("mika-career")),
+        )
+    }
+
     /** 最近一次系统分享尚未发送的草稿和它的私有图片副本。 */
     val sharedDrafts: SharedDraftStore by lazy { SharedDraftStore(java.io.File(filesDir, "shared-drafts")) }
 

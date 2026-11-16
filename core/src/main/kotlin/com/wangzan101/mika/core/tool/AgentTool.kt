@@ -35,6 +35,8 @@ enum class Verb {
     KnowledgeSearch, KnowledgeRead, SkillSearch, SkillRead, SkillSave, MemorySearch, MemorySave, MemoryEdit, ProfileEdit, HistoryRead, WebSearch,
     ScheduleTask,
     SpawnAgent, SettingsList, SettingsSet,
+    /** Local career data: reading or writing the candidate profile, jobs, applications and documents. */
+    CareerRead, CareerWrite,
 }
 
 /** 按名字查得到的工具声明。 */

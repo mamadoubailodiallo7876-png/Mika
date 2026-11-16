@@ -51,6 +51,14 @@ internal class Args(val tool: ToolDef, val o: JsonObject) {
         return d.toInt()
     }
 
+    /** Epoch-millisecond fields exceed Int; keep the same integer/range checks. */
+    fun long(k: String, min: Long, max: Long): Long? {
+        val d = number(k) ?: return null
+        if (d != Math.floor(d)) throw ArgError(k, "must be an integer")
+        if (d < min || d > max) throw ArgError(k, "must be between $min and $max")
+        return d.toLong()
+    }
+
     /** 坐标容忍 [a,b](取中点)。 */
     fun coord(k: String): Int? {
         val v = o[k]

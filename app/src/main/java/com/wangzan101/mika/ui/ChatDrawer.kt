@@ -245,6 +245,7 @@ fun ChatDrawer(
     canSearch: Boolean = false,
     onNew: () -> Unit,
     onPlans: () -> Unit,
+    onCareer: () -> Unit = {},
     onMemory: () -> Unit,
     onBrowser: () -> Unit,
     onFiles: () -> Unit = {},
@@ -309,6 +310,7 @@ fun ChatDrawer(
         // 搜索、多选时把几个入口收起来，把高度让给列表;退出后原样回来
         if (!searchActive && !selecting) Column(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
             NavEntry(MikaIcons.New, stringResource(R.string.chat_new), enabled = canSwitch, onClick = onNew)
+            NavEntry(MikaIcons.Star, "Career", onClick = onCareer)
             NavEntry(MikaIcons.Clock, stringResource(R.string.drawer_plans), onClick = onPlans)
             NavEntry(MikaIcons.Heart, stringResource(R.string.memory_and_skills), onClick = onMemory)
             NavEntry(MikaIcons.Globe, stringResource(R.string.drawer_browser), onClick = onBrowser)
@@ -719,6 +721,7 @@ fun ChatWithDrawer(
     /** 侧栏搜索用的索引;没有时侧栏不显示搜索框。 */
     search: ConversationSearch? = null,
     onPlans: () -> Unit,
+    onCareer: () -> Unit = {},
     onMemory: () -> Unit,
     onBrowser: () -> Unit,
     onFiles: () -> Unit = {},
@@ -919,6 +922,7 @@ fun ChatWithDrawer(
                     canSearch = candidates.isNotEmpty(),
                     onNew = { close { vm.newConversation() } },
                     onPlans = { leave(onPlans) },
+                    onCareer = { leave(onCareer) },
                     onMemory = { leave(onMemory) },
                     onSettings = { leave(onSettings) },
                     onBrowser = { leave(onBrowser) },
