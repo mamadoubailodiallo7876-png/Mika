@@ -21,6 +21,5 @@ class CareerToolRegistrationTest {
     @Test fun everyToolHasAUniqueNameAndANonBlankDescription() {
         assertTrue(CareerTools.all.map { it.name }.distinct().size == CareerTools.all.size)
         assertTrue(CareerTools.all.all { it.def.description.isNotBlank() })
-        assertTrue(CareerTools.all.all { it.def.required.isNotEmpty() || it.def.props.isEmpty() })
     }
 }

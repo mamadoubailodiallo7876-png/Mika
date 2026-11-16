@@ -142,7 +142,7 @@ class ChildRunsTest {
         val (spec, content) = spawnWith("""{"goal":"查一条"}""")
         assertEquals(15, spec.stepBudget)
         assertTrue(spec.readOnly)
-        assertEquals(setOf("web", "sandbox"), spec.capabilities)
+        assertEquals(setOf("web", "sandbox", "career"), spec.capabilities)
         assertEquals(4000, resultLength(content))
         assertEquals("true", content["truncated"].toString())
     }

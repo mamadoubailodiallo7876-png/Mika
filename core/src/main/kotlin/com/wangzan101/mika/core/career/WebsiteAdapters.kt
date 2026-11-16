@@ -144,7 +144,10 @@ object FormFieldMapper {
 
     private data class Synonym(val canonical: String, val patterns: List<Regex>)
 
-    private fun rx(vararg words: String): List<Regex> = words.map { Regex("(?i)\\b${Regex.escape(it)}\\b") }
+    private fun rx(vararg words: String): List<Regex> = words.map { word ->
+        val escaped = Regex.escape(word)
+        Regex("(?i)\\b$escaped\\b")
+    }
 
     private val SYNONYMS = listOf(
         Synonym("firstName", rx("first name", "given name", "forename", "firstname")),

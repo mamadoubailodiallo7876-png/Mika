@@ -83,7 +83,8 @@ object SkillVocabulary {
         val candidates = (known.map(::canonical) + COMMON).filter { it.length >= 2 }.distinct()
         return candidates.filter { skill ->
             val needle = " ${normalize(skill)} "
-            haystack.contains(needle) || Regex("(?:^|\\s)${Regex.escape(normalize(skill))}(?:\\s|$)").containsMatchIn(haystack.trim())
+            val escaped = Regex.escape(normalize(skill))
+            haystack.contains(needle) || Regex("(?:^|\\s)$escaped(?:\\s|$)").containsMatchIn(haystack.trim())
         }.distinct()
     }
 
