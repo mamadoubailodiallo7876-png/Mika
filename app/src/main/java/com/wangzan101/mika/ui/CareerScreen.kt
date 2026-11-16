@@ -755,8 +755,8 @@ private fun ApplicationDetail(
             if (app.confirmationReference.isNotBlank()) {
                 Text("Reference ${app.confirmationReference}", Modifier.padding(top = 6.dp), style = MikaType.Hint, color = c.ok)
             }
-            if (app.followUpAtMs != null) {
-                Text("Follow up ${date(app.followUpAtMs)}", Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink2)
+            app.followUpAtMs?.let { followUp ->
+                Text("Follow up ${date(followUp)}", Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink2)
             }
             if (readiness != null) {
                 if (readiness.blockers.isEmpty()) {
