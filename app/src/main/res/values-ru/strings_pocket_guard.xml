@@ -1,0 +1,6 @@
+<resources>
+    <string name="pocket_guard_title">Защита от касаний в кармане</string>
+    <string name="pocket_guard_summary">Во время задач блокирует касания, когда телефон закрыт и находится в темноте. Сдвиньте для выхода.</string>
+    <string name="pocket_guard_unavailable">Требуются датчики приближения и освещённости.</string>
+    <string name="pocket_guard_exit">Сдвиньте вправо для выхода</string>
+</resources>

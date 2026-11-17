@@ -214,8 +214,11 @@ class TaskService : Service() {
     internal fun hasActiveRuns() = center.running().isNotEmpty()
     internal fun hasQueuedRuns() = center.queued().isNotEmpty()
 
+    private val pocketGuard by lazy { com.wangzan101.mika.pocket.PocketGuardManager(this) }
+
     private fun publishRuns() {
         val r = center.runs()
+        pocketGuard.setTasksActive(center.running().isNotEmpty())
         taskState._runs.value = r
         taskState._activeConversations.value = r.map { it.conversationId }
     }
@@ -943,6 +946,7 @@ class TaskService : Service() {
     private fun openApp(threadId: String? = null) = openApp(this, threadId)
 
     override fun onDestroy() {
+        pocketGuard.close()
         scope.cancel()
         // 服务没了就撑不住进程:留着的那一页如实关掉,对话里记下
         keeper.close(KeptPageClose.AppExit)
