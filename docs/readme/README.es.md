@@ -1,4 +1,4 @@
-<!-- translated-from: README.md @ dbbd6498b424 -->
+<!-- translated-from: README.md @ abeb0ceefbc9 -->
 <div align="center">
 
 <img src="../media/logo.png" alt="Mika" width="88" />
@@ -100,6 +100,7 @@ Después, prueba a decirle: «Pon alarmas mañana a las 9:40 y a las 10:00» o �
 | **Mantén pulsado para hablar** | Mantén pulsado el cuadro de texto para dictar y corrige antes de enviar; mantén pulsada la cápsula flotante para hablar y suelta para enviarlo directamente. Usa el reconocimiento de voz del teléfono o, si no tiene, un modelo de voz de tu proveedor |
 | **Archivos y cálculo** | Un sandbox de Linux por conversación ejecuta Python, Node y shell sobre los archivos que le envías (arm64) |
 | **Desde tu ordenador** | Las herramientas de IA de tu ordenador pueden encargarle tareas a Mika mediante CLI + Skill o MCP ([usar Mika desde un ordenador](../computer.en.md)) |
+| **Espacio de carrera** | Crea un perfil profesional veraz, adapta currículums y cartas de presentación, compara ofertas guardadas, prepara candidaturas con puntos de aprobación, sigue las respuestas y ensaya entrevistas ([cómo funciona](../MIKA_CAREER_AGENT_DESIGN.md)) |
 
 Por defecto, Mika funciona en **modo Preguntar**: solo te consulta antes de gastar dinero (hacer pedidos, pagar) y todo lo demás lo hace sin más. También puedes cambiar al **modo Autónomo**. Consulta [Preguntar y Autónomo](../modes.en.md).
 
@@ -119,7 +120,45 @@ Los proveedores predefinidos y los tipos de API a los que se puede conectar con 
 
 También puedes prescindir de la clave e iniciar sesión con una cuenta de ChatGPT (Plus / Pro), xAI / Grok u OpenRouter. Los pasos para añadir un modelo y lo que conviene saber de cada inicio de sesión están en [modelos e inicio de sesión](../models.en.md).
 
+**Opciones gratuitas.** Los proveedores con un nivel gratuito publicado (Gemini, Groq, Mistral y los modelos `:free` de OpenRouter) aparecen agrupados primero como *Free AI* en la pantalla de configuración, y **Jobby Free** no necesita clave ni cuenta. Nada de esto es ilimitado: los niveles gratuitos tienen topes diarios y la opción sin clave está limitada por velocidad y es de mejor esfuerzo, así que úsala como respaldo y elige una clave gratuita como modelo principal. Los límites y las condiciones de uso de datos de cada proveedor siguen aplicándose.
+
 </details>
+
+## Espacio de carrera
+
+Abre **Career** desde el menú lateral. Es un espacio de búsqueda de empleo que funciona en local: un único registro veraz del candidato, documentos, ofertas guardadas, candidaturas y preparación de entrevistas. Los datos de carrera están separados de tus conversaciones y se quedan en el móvil.
+
+### Un perfil con hechos comprobados
+
+- Contacto, enlaces, puestos objetivo, ubicaciones, salario y preferencias de trabajo, experiencia, formación, habilidades, proyectos, certificaciones e idiomas en un solo lugar.
+- Importa un CV desde el almacenamiento del móvil (texto, Markdown, DOCX o PDF) o pégalo, y Jobby rellena con lo que puede leer como propuestas. Lo importado nunca cuenta como hecho confirmado y no sobrescribe en silencio lo que ya estaba confirmado.
+- Antes de generar documentos puedes ver la completitud, los avisos de validación y lo que falta; lo importado solo entra en currículums y cartas después de que lo confirmes.
+
+### Ofertas, coincidencias y documentos
+
+- Pega una página o descripción de oferta y se estructura el puesto, la empresa, los requisitos, las habilidades, el salario, la ubicación, la fecha límite y la fuente. Las ofertas duplicadas se fusionan y se marcan las señales habituales de fraude (tasas, transferencias, enlaces ocultos).
+- Busca en local entre las ofertas guardadas y obtén una coincidencia explicable con requisitos cumplidos, ausentes y desconocidos. La puntuación es una estimación, no una probabilidad de contratación.
+- Genera currículums y cartas adaptados al puesto, guarda versiones, previsualízalos y expórtalos a PDF, DOCX o texto en `Downloads/Jobby`.
+
+### Candidaturas con puntos de control reales
+
+- Prepara una candidatura desde una oferta guardada con sus documentos y revisa si faltan hechos o preguntas de elegibilidad.
+- El asistente puede preparar, analizar campos del formulario, pedir aprobación y hacer seguimiento, pero no puede enviar la candidatura.
+- Solo tú la registras en la interfaz tras aprobarla y con un número de referencia o mensaje de confirmación como prueba; ese recibo se puede verificar después.
+- Los campos sensibles del formulario se te devuelven en lugar de rellenarse solos.
+
+### Preparación de entrevistas
+
+- Crea un plan de preguntas a partir del puesto, las habilidades, el perfil confirmado y las carencias, además de preguntas para el reclutador y una lista de investigación.
+- Da comentarios con estructura STAR sobre una respuesta de práctica y redacta un seguimiento breve y factual para una candidatura abierta.
+
+### Seguridad y privacidad
+
+- Los datos de carrera se cifran en el dispositivo con una clave del Android Keystore. El contacto y el texto de los documentos se ocultan de los registros y no hay servidor de carrera.
+- Las descripciones de ofertas, el texto web y los CV importados son datos no confiables; las instrucciones que contengan no se obedecen.
+- Nunca se saltan CAPTCHAs, MFA, muros de inicio de sesión ni los términos del sitio. Borrar todos los datos de carrera es una acción explícita de la interfaz y el modelo no puede llamarla.
+
+El diseño, las habilidades y la hoja de ruta están en [diseño del agente de carrera](../MIKA_CAREER_AGENT_DESIGN.md), [guía de habilidades](../MIKA_SKILLS_GUIDE.md), [auditoría de arquitectura](../MIKA_ARCHITECTURE_AUDIT.md) y [hoja de ruta de mejoras](../MIKA_IMPROVEMENT_ROADMAP.md).
 
 ## En qué móviles funciona
 
