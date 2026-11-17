@@ -74,6 +74,8 @@ object ProviderPresets {
         // 订阅制,一个 Key 用多家模型;各模型走哪种协议、哪个地址由模型列表逐个写明,这里的接口类型只是没写明时的退路。
         // 每个请求都要带对话的会话号,不带就拒绝(HTTP 400)
         ProviderPreset("OpenCode Go", ProviderConfig.Kind.OpenAiCompat, "https://opencode.ai/zen/go/v1", caps(), sessionHeader = "x-opencode-session"),
+        // 聚合网关:一个 Key 调多家模型,Anthropic 协议的地址就是根域(不带 /v1),OpenAI 兼容接口在 /v1 下;托管多家的,不给 familyTokens
+        ProviderPreset("TeapotRouter", ProviderConfig.Kind.Anthropic, "https://api.teapotrouter.com", caps(vision = true, context = 200_000)),
         ProviderPreset("Anthropic", ProviderConfig.Kind.Anthropic, "https://api.anthropic.com", caps(vision = true, context = 200_000), familyTokens = listOf("claude")),
         ProviderPreset("Gemini", ProviderConfig.Kind.Gemini, "https://generativelanguage.googleapis.com", caps(vision = true, context = 128_000), familyTokens = listOf("gemini")),
         // 官方 API 走 Responses:新的主力模型调用工具必须用 Responses,Chat Completions 带工具会被拒。列模型同样是 GET /models
