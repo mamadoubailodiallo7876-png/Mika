@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -590,9 +591,21 @@ private fun JobsTab(
     onRemove: (JobPosting) -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
-    val jobs = remember(data.jobs, query) {
-        val filtered = JobSearch.search(data.jobs, query, includeClosed = true)
-        if (query.isBlank()) filtered.sortedByDescending { it.discoveredAtMs } else filtered
+    // 每次按键都重排整份清单会掉帧:打字停下再搜,清空时立刻还原
+    var applied by remember { mutableStateOf("") }
+    LaunchedEffect(query) {
+        if (query == applied) return@LaunchedEffect
+        if (query.isNotBlank()) kotlinx.coroutines.delay(180)
+        applied = query
+    }
+    val jobs = remember(data.jobs, applied) {
+        val filtered = JobSearch.search(data.jobs, applied, includeClosed = true)
+        if (applied.isBlank()) filtered.sortedByDescending { it.discoveredAtMs } else filtered
+    }
+    // 一次算好所有活跃职位的匹配分,别在每一行的组合里各查一次
+    val scores = remember(data.jobs, data.profile) {
+        data.jobs.filter { it.status == JobStatus.Active }
+            .associate { it.id to runCatching { service.match(it.id).score }.getOrNull() }
     }
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         SearchField(query, { query = it }, "Search saved jobs", Modifier.weight(1f))
@@ -621,14 +634,7 @@ private fun JobsTab(
                     },
                     detailColor = if (job.suspicious.isNotEmpty()) MikaTheme.colors.warn else Color.Unspecified,
                     onClick = { onSelect(job.id) },
-                    trailing = {
-                        if (job.status == JobStatus.Active) {
-                            val score = remember(job.id, data.profile) {
-                                runCatching { service.match(job.id).score }.getOrNull()
-                            }
-                            score?.let { MatchPill(it) }
-                        }
-                    },
+                    trailing = { scores[job.id]?.let { MatchPill(it) } },
                 )
             }
         }

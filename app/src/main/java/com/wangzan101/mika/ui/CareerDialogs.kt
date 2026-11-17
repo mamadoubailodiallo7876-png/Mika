@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.core.career.ApplicationRecord
 import com.wangzan101.mika.core.career.CandidateProfile
@@ -169,15 +170,30 @@ internal fun ImportCvDialog(onDismiss: () -> Unit, onImport: (text: String, file
     val c = MikaTheme.colors
     var text by remember { mutableStateOf("") }
     var fileName by remember { mutableStateOf("pasted-cv.txt") }
+    var fileProblem by remember { mutableStateOf<String?>(null) }
+    // 选好的文件直接读成文字并提取:省掉复制粘贴,读完立刻填进资料(仍是待确认的提案)
+    val pickFile = rememberTextFilePicker(
+        onPicked = { picked ->
+            text = picked.text
+            fileName = picked.fileName
+            fileProblem = picked.warnings.firstOrNull()
+            onImport(picked.text, picked.fileName)
+        },
+        onError = { fileProblem = it },
+    )
     MikaDialog(
         onDismissRequest = onDismiss,
         title = { Text("Import an existing CV") },
         text = {
             DialogBody {
                 Text(
-                    "Paste the CV text. Jobby proposes entries but keeps every imported fact unconfirmed until you review and confirm it. Scanned PDFs need text extraction first.",
+                    "Choose a PDF, DOCX or text file from this phone, or paste the CV text. Jobby proposes entries and fills them into your profile, but keeps every imported fact unconfirmed until you review and confirm it. Scanned PDFs need text extraction first.",
                     style = MikaType.Hint, color = c.ink3,
                 )
+                TextButton({ pickFile() }, Modifier.testTag("cv-import-file")) {
+                    Text("Choose a file from this phone")
+                }
+                fileProblem?.let { Text(it, style = MikaType.Hint, color = c.bad) }
                 CareerField("File name (for context)", fileName, { fileName = it }, "pasted-cv.txt")
                 CareerField("CV text", text, { text = it }, "Paste your CV here", singleLine = false, minLines = 10)
             }

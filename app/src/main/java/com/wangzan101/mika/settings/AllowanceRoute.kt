@@ -48,6 +48,8 @@ internal data class AllowanceRoute(
                 "xAI" -> AllowanceRoute(dashboard = "https://console.x.ai/")
                 "Mistral" -> AllowanceRoute(dashboard = "https://admin.mistral.ai/organization/usage")
                 "Groq" -> AllowanceRoute(dashboard = "https://console.groq.com/settings/billing")
+                // 不用账号、没有控制台:看这家自己的用量说明
+                "Jobby Free" -> AllowanceRoute(dashboard = "https://pollinations.ai/")
                 else -> AllowanceRoute()
             }
         }

@@ -129,8 +129,11 @@ data class AddForm(
 
     val isCustom: Boolean get() = preset == ProviderPresets.custom.label
 
+    /** 选中的模板;「自定义」认不出时为 [ProviderPresets.custom]。 */
+    val selectedPreset: ProviderPreset get() = presetFor(preset)
+
     /** 跑在用户自己机器上的服务(见 [ProviderPreset.selfHosted]):地址预填了本机的默认端口,要能改成那台机器的。 */
-    val isSelfHosted: Boolean get() = presetFor(preset).selfHosted
+    val isSelfHosted: Boolean get() = selectedPreset.selfHosted
 
     /** 地址要用户填或改:自定义,和自己跑的服务。 */
     val urlEditable: Boolean get() = isCustom || isSelfHosted
@@ -146,8 +149,11 @@ data class AddForm(
     val unencryptedWarning: String?
         get() = if (urlProblem == null && LocalHosts.unencryptedRemote(baseUrl)) tr(R.string.model_url_unencrypted) else null
 
-    /** 自己跑的服务和自定义的 OpenAI 兼容接口(多半是本地服务)可以不填 Key,其余都要。 */
-    val keyRequired: Boolean get() = !isSelfHosted && !(isCustom && kind == ProviderConfig.Kind.OpenAiCompat)
+    /** 随 App 自带的那家不要 Key(见 [ProviderPreset.keyless])。 */
+    val isKeyless: Boolean get() = selectedPreset.keyless
+
+    /** 自己跑的服务、自带免费 AI 和自定义的 OpenAI 兼容接口(多半是本地服务)可以不填 Key,其余都要。 */
+    val keyRequired: Boolean get() = !isSelfHosted && !isKeyless && !(isCustom && kind == ProviderConfig.Kind.OpenAiCompat)
 
     val canTest: Boolean get() =
         urlProblem == null && (!keyRequired || apiKey.isNotBlank()) && test != ListState.Running && (!noList || model.isNotBlank())
@@ -181,7 +187,11 @@ data class AddForm(
     val familyTokens: List<String> get() = presetFor(preset).familyTokens.ifEmpty { ModelOptions.familyOf(baseUrl) }
 
     companion object {
-        fun of(p: ProviderPreset) = AddForm(p.label, p.kind, p.baseUrl, "")
+        /** [ProviderPreset.defaultModel] 有值时预填模型名并展开那一栏:这类服务的列表接口不可靠或不用列。 */
+        fun of(p: ProviderPreset) = AddForm(
+            p.label, p.kind, p.baseUrl, "",
+            model = p.defaultModel, manual = p.defaultModel.isNotBlank(),
+        )
         fun presetFor(label: String): ProviderPreset = ProviderPresets.all.firstOrNull { it.label == label } ?: ProviderPresets.custom
     }
 }

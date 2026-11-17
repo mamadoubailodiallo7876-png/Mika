@@ -25,6 +25,15 @@ data class ProviderPreset(
      * 只填官方文档确认过的值,不猜;照服务商写明的顺序。
      */
     val reasoningLevels: List<String> = emptyList(),
+    /**
+     * 这家有不用付钱的用量时写一句人话(如「Free tier — no card」),界面上标出来并按免费排在前面;没有为 null。
+     * 只写官方确实给的免费额度,不把试用说成免费。
+     */
+    val freeTier: String? = null,
+    /** 不填 Key 也能用(随 App 附带的那家);表单里 Key 一栏可以空着。 */
+    val keyless: Boolean = false,
+    /** 选中这个模板时预填的模型名;空串表示由列模型或用户填。 */
+    val defaultModel: String = "",
 )
 
 object ProviderPresets {
@@ -69,19 +78,28 @@ object ProviderPresets {
         ProviderPreset("腾讯混元", ProviderConfig.Kind.OpenAiCompat, "https://tokenhub.tencentmaas.com/v1", caps(context = 256_000), familyTokens = listOf("hunyuan")),
         // Key 是控制台生成的 bce-v3/… 那一串,照 Bearer 发
         ProviderPreset("百度千帆", ProviderConfig.Kind.OpenAiCompat, "https://qianfan.baidubce.com/v2", caps(), familyTokens = listOf("ernie")),
-        ProviderPreset("OpenRouter", ProviderConfig.Kind.OpenAiCompat, "https://openrouter.ai/api/v1", caps()),
+        ProviderPreset("OpenRouter", ProviderConfig.Kind.OpenAiCompat, "https://openrouter.ai/api/v1", caps(),
+            freeTier = "Free models (:free)"),
         ProviderPreset("Requesty", ProviderConfig.Kind.OpenAiCompat, "https://router.requesty.ai/v1", caps()),
         // 订阅制,一个 Key 用多家模型;各模型走哪种协议、哪个地址由模型列表逐个写明,这里的接口类型只是没写明时的退路。
         // 每个请求都要带对话的会话号,不带就拒绝(HTTP 400)
         ProviderPreset("OpenCode Go", ProviderConfig.Kind.OpenAiCompat, "https://opencode.ai/zen/go/v1", caps(), sessionHeader = "x-opencode-session"),
         ProviderPreset("Anthropic", ProviderConfig.Kind.Anthropic, "https://api.anthropic.com", caps(vision = true, context = 200_000), familyTokens = listOf("claude")),
-        ProviderPreset("Gemini", ProviderConfig.Kind.Gemini, "https://generativelanguage.googleapis.com", caps(vision = true, context = 128_000), familyTokens = listOf("gemini")),
+        ProviderPreset("Gemini", ProviderConfig.Kind.Gemini, "https://generativelanguage.googleapis.com", caps(vision = true, context = 128_000), familyTokens = listOf("gemini"),
+            freeTier = "Free tier - no card"),
         // 官方 API 走 Responses:新的主力模型调用工具必须用 Responses,Chat Completions 带工具会被拒。列模型同样是 GET /models
         ProviderPreset("OpenAI", ProviderConfig.Kind.OpenAiResponses, "https://api.openai.com/v1", caps(vision = true, context = 400_000), familyTokens = listOf("gpt")),
         ProviderPreset("xAI", ProviderConfig.Kind.OpenAiCompat, "https://api.x.ai/v1", caps(vision = true, context = 256_000), familyTokens = listOf("grok")),
         // 列模型接口写明每个模型能不能调用工具、看图和上下文长度
-        ProviderPreset("Mistral", ProviderConfig.Kind.OpenAiCompat, "https://api.mistral.ai/v1", caps(vision = true, context = 128_000), familyTokens = listOf("mistral")),
-        ProviderPreset("Groq", ProviderConfig.Kind.OpenAiCompat, "https://api.groq.com/openai/v1", caps(context = 128_000)),
+        ProviderPreset("Mistral", ProviderConfig.Kind.OpenAiCompat, "https://api.mistral.ai/v1", caps(vision = true, context = 128_000), familyTokens = listOf("mistral"),
+            freeTier = "Free tier"),
+        ProviderPreset("Groq", ProviderConfig.Kind.OpenAiCompat, "https://api.groq.com/openai/v1", caps(context = 128_000),
+            familyTokens = listOf("groq", "gpt-oss", "qwen"), freeTier = "Free tier - 1,000 a day"),
+        // 随 App 自带的免费 AI:不用注册、不填 Key,额度按来源 IP 限流(约每 30 秒一次),只作备用,
+        // 不建议当主模型:限流按次算、不保证一直在线,也不保证会调用工具
+        ProviderPreset("Jobby Free", ProviderConfig.Kind.OpenAiCompat, "https://text.pollinations.ai/openai",
+            Capabilities(toolCalls = false, vision = false, contextTokens = 32_000, reasoning = false),
+            familyTokens = listOf("gpt-oss"), freeTier = "No key needed", keyless = true, defaultModel = "gpt-oss-20b"),
         // 自己机器上跑的:地址是本机的默认端口,跑在电脑上时改成电脑的局域网地址;不要 Key
         ProviderPreset("Ollama", ProviderConfig.Kind.OpenAiCompat, "http://127.0.0.1:11434/v1", caps(), selfHosted = true),
         ProviderPreset("LM Studio", ProviderConfig.Kind.OpenAiCompat, "http://127.0.0.1:1234/v1", caps(), selfHosted = true),
@@ -89,6 +107,9 @@ object ProviderPresets {
     )
 
     val custom: ProviderPreset get() = all.last()
+
+    /** 带免费额度的模板,保持预设顺序;界面按它排「免费」那一组。 */
+    val free: List<ProviderPreset> get() = all.filter { it.freeTier != null }
 
     /** 同主机有多家预设时，按逐段路径相同的长度挑更贴近的一个；根地址并列时保持预设顺序。 */
     private fun pathOverlap(presetUrl: String, inputUrl: String): Int {

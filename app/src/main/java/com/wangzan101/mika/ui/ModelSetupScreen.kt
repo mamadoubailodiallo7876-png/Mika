@@ -66,6 +66,7 @@ import com.wangzan101.mika.settings.MODEL_READ_TIMEOUT_SECONDS
 import com.wangzan101.mika.settings.ModelOption
 import com.wangzan101.mika.settings.ModelOptions
 import com.wangzan101.mika.settings.ProviderConfig
+import com.wangzan101.mika.settings.ProviderPreset
 import com.wangzan101.mika.settings.ProviderPresets
 import com.wangzan101.mika.settings.ProviderStore
 import com.wangzan101.mika.settings.RoleChoice
@@ -367,12 +368,28 @@ private fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions) {
         }
     }
     AccountSignInGroup(ui, actions.openSignIn, actions.openProvider)
+    // 有免费额度的排在最前,一进来先看到不用付钱的;其余(含自定义)照旧一组
+    val freePresets = ProviderPresets.free
+    if (freePresets.isNotEmpty()) {
+        GroupLabel(ModelSetupCopy.FREE_GROUP)
+        FlowRow(
+            Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            freePresets.forEach { p ->
+                SelectChip(p.label, f.preset == p.label, { actions.selectPreset(p.label) }, Modifier.testTag("preset-${p.label}"))
+            }
+        }
+        f.selectedPreset.takeIf { it.freeTier != null }?.let { p ->
+            FooterNote(ModelSetupCopy.freeNote(p), Modifier.testTag("setup-free-note"))
+        }
+    }
     GroupLabel(ModelsCopy.KEY_GROUP)
     FlowRow(
         Modifier.fillMaxWidth().padding(bottom = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        ProviderPresets.all.forEach { p ->
+        ProviderPresets.all.filter { it.freeTier == null }.forEach { p ->
             // 「自定义」按界面语言显示;服务商的名字原样
             SelectChip(if (p == ProviderPresets.custom) stringResource(R.string.preset_custom) else p.label, f.preset == p.label, { actions.selectPreset(p.label) }, Modifier.testTag("preset-${p.label}"))
         }
@@ -431,6 +448,7 @@ private fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions) {
     f.suggestedPreset?.let { preset -> PresetSuggestion(f, preset.label) { actions.selectPreset(preset.label) } }
     if (f.noList) FooterNote(if (f.isCustom) ModelSetupCopy.NO_LIST_CUSTOM else ModelSetupCopy.NO_LIST_PRESET, Modifier.testTag("setup-no-list"))
     if (f.isSelfHosted) FooterNote(ModelSetupCopy.SELF_HOSTED_NOTE, Modifier.testTag("setup-self-hosted"))
+    if (f.isKeyless) FooterNote(ModelSetupCopy.KEYLESS_NOTE, Modifier.testTag("setup-keyless"))
     f.unencryptedWarning?.let { FooterNote(it, Modifier.testTag("setup-url-unencrypted"), color = c.warn) }
     MikaButton(
         if (f.test == ListState.Running) ModelSetupCopy.TESTING else ModelSetupCopy.TEST_AND_SAVE,
@@ -659,6 +677,14 @@ object ModelSetupCopy {
     const val API_KEY = "API Key"
     val KEY_HINT: String get() = tr(R.string.model_key_hint)
     val KEY_OPTIONAL: String get() = tr(R.string.model_key_optional)
+
+    /** 不用付钱的几家单列一组,排在最前。 */
+    val FREE_GROUP: String get() = "Free AI"
+    val KEYLESS_NOTE: String get() = "Works without an API key and without an account. It is best effort: requests are rate-limited, and it may not support tool calls, so use it as a fallback rather than your main model."
+
+    /** 选中某家免费服务商时说明它的免费额度和代价。 */
+    fun freeNote(p: ProviderPreset): String = p.label + " - " + p.freeTier +
+        (if (p.keyless) "" else ". Free tiers need their free API key; limits and data-use terms are theirs, so check them before sending personal details.")
     val TEST_AND_SAVE: String get() = tr(R.string.model_test_save)
     val TESTING: String get() = tr(R.string.model_testing)
     val PICK_MAIN: String get() = tr(R.string.model_pick_main)

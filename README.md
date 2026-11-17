@@ -97,10 +97,54 @@ Then try saying: "Set alarms for 9:40 and 10:00 tomorrow morning" or "Check the 
 | **Hold to talk** | Hold the chat input to speak and edit the words before sending; long-press the floating capsule to speak and release to send. Uses the phone’s built-in speech recognition, or a provider’s speech model if it has none |
 | **Files and computing** | A Linux sandbox per conversation runs Python, Node and shell on the files you send (arm64) |
 | **From your computer** | AI tools on your computer can hand Mika tasks through CLI + Skill or MCP ([use Mika from a computer](docs/computer.en.md)) |
+| **Career workspace** | Build a truthful career profile, tailor resumes and cover letters, match saved jobs, prepare applications with approval checkpoints, track responses and rehearse interviews ([how it works](docs/MIKA_CAREER_AGENT_DESIGN.md)) |
 
 By default Mika runs in **Ask mode**: it checks with you only before spending money (placing orders, paying) and just does everything else. You can switch to **Autonomous mode** instead. See [Ask and Autonomous](docs/modes.en.md).
 
 For how each of these works and the finer details, see [features in detail](docs/features.en.md).
+
+## Career workspace
+
+Open **Career** from the side menu. It is a local-first workspace for the whole job search: one truthful candidate record, documents, saved roles, applications and interview preparation. Career records are separate from your conversations and stay on the phone.
+
+### One profile, checked facts
+
+- Keep contact details, links, headline, summary, work authorization, target roles, locations, salary and employment preferences, experience, education, skills, projects, certifications, languages and other qualifications in one place.
+- Import an existing CV straight from phone storage (text, Markdown, DOCX or PDF) or paste it, and Jobby fills the details it can read into the profile as proposals. Imported values are never treated as confirmed facts, and existing confirmed values are not silently overwritten.
+- Personal skills can also be imported from a file on the phone (a shared `SKILL.md`, DOCX or PDF) from Skills → Import, instead of pasting its text.
+- See profile completeness, validation issues and the next missing detail, then confirm imported facts before they can appear in a document.
+- Resumes and letters are built only from confirmed facts. Uncertain entries are excluded or flagged instead of invented.
+
+### Jobs, matching and documents
+
+- Paste a job page or description to structure the title, company, requirements, skills, salary, location, deadline and source. Duplicate listings are merged, and the listing is flagged when it mentions fees, financial details, hidden links or other common scam patterns.
+- Search saved roles locally and get an explainable match with matched and missing skills, strengths, gaps and recommendations. The score is an estimate, not a probability of being hired.
+- Generate role-specific resumes and cover letters, keep versions, preview them, and export PDF, DOCX or plain text to `Downloads/Jobby`.
+- Use page-specific adapter hints for common job sites while keeping all external interaction in the existing browser and phone tools.
+
+### Applications with real checkpoints
+
+- Prepare an application from a saved job with the right documents, then run a readiness check for missing facts or eligibility questions.
+- The assistant can prepare, analyse form fields, request approval and track. It cannot submit an application.
+- A submission is recorded only by you in the UI after approval, with a reference or confirmation text as evidence. "Submitted" never comes from a click alone, and the receipt can be verified against the reference.
+- Track status from discovered to offer or rejection, review history and submission evidence, schedule follow-ups, record interviews and withdraw when needed.
+- Sensitive form fields are handed back to you rather than filled automatically.
+
+### Interview preparation
+
+- Build a question plan from the role, named skills, confirmed profile and gaps, plus questions to ask the recruiter and a research checklist.
+- Get structural STAR feedback on a practice answer, and draft a short factual follow-up for an application that is still open.
+
+### Safety and privacy
+
+- Career data is encrypted at rest with an Android Keystore key. Contact details and document text are redacted from run records, and there is no career server.
+- Job descriptions, website text and imported CVs are untrusted data; instructions inside them are not treated as commands.
+- CAPTCHAs, MFA, sign-in walls and site terms are never bypassed.
+- Erasing all career data is an explicit UI action, not something the model can call.
+
+The existing agent dispatcher exposes career actions through `career_profile`, `career_resume`, `career_cover_letter`, `career_document`, `job_search`, `job_extract`, `job_match`, `job_application`, `career_interview` and `career_dashboard`. The Career Manager prompt coordinates profile and documents, job research and matching, application execution, and tracking and interview preparation. Read-only child runs can research and match but cannot submit or change application state.
+
+See the [Career Agent design](docs/MIKA_CAREER_AGENT_DESIGN.md), [skills guide](docs/MIKA_SKILLS_GUIDE.md), [architecture audit](docs/MIKA_ARCHITECTURE_AUDIT.md) and [improvement roadmap](docs/MIKA_IMPROVEMENT_ROADMAP.md). The named career, security and Android engineering skills live under `.kilo/skills/`.
 
 <details>
 <summary>Apps and websites with built-in usage knowledge (anything not listed still works)</summary>
@@ -123,10 +167,12 @@ The names are shown as they appear in the knowledge files.
 
 <!-- generated:providers:start -->
 <!-- Generated by ./gradlew updateReadme; do not edit by hand -->
-Presets for DeepSeek, 通义千问, Kimi, 智谱, 智谱 Coding Plan, 硅基流动, 火山方舟, MiniMax, 阶跃星辰, 腾讯混元, 百度千帆, OpenRouter, Requesty, OpenCode Go, Anthropic, Gemini, OpenAI, xAI, Mistral, Groq, Ollama, LM Studio and more; for any other provider pick Custom (自定义), which takes any OpenAI-compatible, Anthropic, Gemini or OpenAI Responses endpoint.
+Presets for DeepSeek, 通义千问, Kimi, 智谱, 智谱 Coding Plan, 硅基流动, 火山方舟, MiniMax, 阶跃星辰, 腾讯混元, 百度千帆, OpenRouter, Requesty, OpenCode Go, Anthropic, Gemini, OpenAI, xAI, Mistral, Groq, Jobby Free, Ollama, LM Studio and more; for any other provider pick Custom (自定义), which takes any OpenAI-compatible, Anthropic, Gemini or OpenAI Responses endpoint.
 <!-- generated:providers:end -->
 
 You can also skip the key and sign in with a ChatGPT (Plus / Pro), xAI / Grok or OpenRouter account. Steps for adding a model, and what to know about each sign-in, are in [models and sign-in](docs/models.en.md).
+
+**Free options.** The providers that publish a free tier (Gemini, Groq, Mistral, OpenRouter's `:free` models) are grouped first as *Free AI* in the setup screen, and **Jobby Free** needs no key or account at all. Nothing here is unlimited: free tiers have daily request caps, and the keyless option is rate-limited and best effort, so use it as a fallback and pick a free-tier key as your main model. Each provider's own limits and data-use terms still apply.
 
 </details>
 
@@ -172,6 +218,7 @@ More answers are in the [FAQ](docs/faq.en.md).
 - **Follow the author**: X [@wangzan101](https://x.com/wangzan101)
 - **Report a problem**: [open an issue](https://github.com/wangzan101/Mika/issues/new/choose); About › Send feedback in the app can attach diagnostics
 - **Contribute**: add usage knowledge for an app or website (plain text, no code needed), or contribute code; see the [contributing guide](.github/CONTRIBUTING.md)
+- **Builds**: every push and pull request runs the Android build workflow, which validates the Gradle setup, runs core and app unit tests, builds a debug APK and uploads it as the `Mika-Android-debug` artifact
 
 ## Star History
 

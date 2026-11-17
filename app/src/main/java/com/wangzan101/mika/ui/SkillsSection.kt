@@ -132,6 +132,17 @@ internal fun SkillsSection(vm: MemoryViewModel, ui: SkillsUi, pending: Boolean) 
     if (importing) {
         var text by remember { mutableStateOf("") }
         var problem by remember { mutableStateOf<String?>(null) }
+        var pickedName by remember { mutableStateOf("") }
+        var fileProblem by remember { mutableStateOf<String?>(null) }
+        val pickFile = rememberTextFilePicker(
+            onPicked = { picked ->
+                text = picked.text
+                pickedName = picked.fileName
+                problem = null
+                fileProblem = picked.warnings.firstOrNull()
+            },
+            onError = { fileProblem = it },
+        )
         MikaDialog(
             onDismissRequest = { importing = false },
             title = { Text(stringResource(R.string.skills_import)) },
@@ -139,8 +150,15 @@ internal fun SkillsSection(vm: MemoryViewModel, ui: SkillsUi, pending: Boolean) 
                 KeyboardDismissArea {
                     Column {
                         Text(stringResource(R.string.skills_import_hint), style = MikaType.Hint, color = MikaTheme.colors.ink3)
+                        // 手机上存着的 SKILL.md / .txt / .docx / .pdf 直接选,不用先复制再粘贴
+                        TextButton({ pickFile() }, Modifier.testTag("skill-import-file")) {
+                            Text("Choose a file from this phone")
+                        }
+                        if (pickedName.isNotBlank()) {
+                            Text(pickedName, style = MikaType.Hint, color = MikaTheme.colors.ink3, maxLines = 1)
+                        }
                         OutlinedTextField(text, { text = it; problem = null }, Modifier.fillMaxWidth().padding(top = 8.dp).heightIn(min = 240.dp).keepsKeyboard().testTag("skill-import"))
-                        problem?.let { Text(it, Modifier.padding(top = 6.dp), style = MikaType.Hint, color = MikaTheme.colors.bad) }
+                        (fileProblem ?: problem)?.let { Text(it, Modifier.padding(top = 6.dp), style = MikaType.Hint, color = MikaTheme.colors.bad) }
                     }
                 }
             },

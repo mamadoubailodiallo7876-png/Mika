@@ -41,6 +41,25 @@ class ProviderPresetsTest {
         assertTrue(openAi.copy(apiKey = "sk").canTest)
     }
 
+    /**
+     * 免费的几家:选项里有,自带的那个不填 Key 就能测、自带模型名;有免费额度的一定要说清是什么额度。
+     * 只列出官方确实给的,别把付费或试用写成免费。
+     */
+    @Test fun freePresetsAreUsableAndHonest() {
+        assertTrue(ProviderPresets.free.map { it.label }.containsAll(listOf("Gemini", "Groq", "Jobby Free")))
+        for (p in ProviderPresets.free) assertTrue(p.label, !p.freeTier.isNullOrBlank())
+        val builtIn = preset("Jobby Free")
+        assertTrue("自带的不要 Key", builtIn.keyless)
+        assertEquals("gpt-oss-20b", builtIn.defaultModel)
+        val form = AddForm.of(builtIn)
+        assertFalse(form.keyRequired)
+        assertTrue(form.showModel)
+        assertEquals("gpt-oss-20b", form.model)
+        assertTrue("不填 Key 也能测试", form.canTest)
+        // 免费的那组和其余分组不重叠:每一家只出现在一个组里
+        assertEquals(ProviderPresets.all.size, ProviderPresets.free.size + ProviderPresets.all.count { it.freeTier == null })
+    }
+
     /** 主机名对得上就认出是哪家(路径不论);自己跑的服务、认不出的地址不算。 */
     @Test fun presetByHost() {
         assertEquals("Gemini", ProviderPresets.forHost("https://generativelanguage.googleapis.com")?.label)
