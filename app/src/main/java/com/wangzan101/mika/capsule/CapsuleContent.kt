@@ -109,6 +109,7 @@ object CapsuleCopy {
     /** 读屏时一颗图标的说法:在做什么、要不要你处理、结果;好几件时的件数已在 [CapsuleView.Shown.text] 里。 */
     fun describe(view: CapsuleView.Shown): String = when {
         view.kind == CapsuleKind.Idle -> IDLE
+        view.kind == CapsuleKind.LiveVoice -> view.text
         view.kind == CapsuleKind.Notice -> tr(R.string.notice_hint_capsule_desc, view.count)
         view.kind.needsYou -> tr(R.string.capsule_desc_needs, view.text)
         view.kind == CapsuleKind.Running -> tr(R.string.capsule_desc_running, view.text)
@@ -249,7 +250,7 @@ private fun Leading(kind: CapsuleKind) {
         kind == CapsuleKind.Done -> Icon(MikaIcons.Check, null, Modifier.size(16.dp), tint = c.ok)
         kind == CapsuleKind.Failed -> Icon(MikaIcons.Exclaim, null, Modifier.size(16.dp), tint = c.ink3)
         kind == CapsuleKind.Cancelled -> Icon(MikaIcons.Stop, null, Modifier.size(16.dp), tint = c.ink3)
-        kind == CapsuleKind.KeptPage -> LiveDot(c)
+        kind == CapsuleKind.LiveVoice || kind == CapsuleKind.KeptPage -> LiveDot(c)
         else -> Unit
     }
 }

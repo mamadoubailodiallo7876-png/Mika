@@ -5,8 +5,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Opt-in, task-scoped incoming SMS only; never request READ_SMS or the default SMS role. -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <!-- 按住说话时录音，转成文字；用户浏览器里的网页要麦克风时也用它。 -->
+    <!-- 按住说话时录音，转成文字；实时语音对话与用户浏览器里的网页要麦克风时也用它。 -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- 实时全双工语音对话切换免提外放/蓝牙耳机路由与硬件回声消除通信模式(普通权限,安装即有)。 -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <!-- 用户浏览器里的网页要摄像头（Mika 自己拍照走系统相机，不用这个权限）；网页请求时先弹框问用户。 -->
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- 用户浏览器里的网页要定位；网页请求时先弹框问用户。 -->
@@ -17,6 +19,7 @@
     <!-- 沙箱联网时读当前网络的 DNS 服务器 -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -252,6 +255,12 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Runs a user-requested phone task on the app's own virtual display and shows its progress; afterwards keeps the one web page the user asked to keep open running, for at most two hours" />
         </service>
+
+        <!-- 语音模式全双工语音对话:切到别的 App 或锁屏期间以麦克风前台服务维持语音模式,通知栏常驻闭麦与结束按钮 -->
+        <service
+            android:name=".personal.live.PersonalLiveService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
 
         <!-- 通话:Telecom 绑定伴侣 InCallService,系统电话仍用自己的通话界面;前台服务在锁屏时撑住进程。 -->
         <service
