@@ -1,6 +1,8 @@
 package com.wangzan101.mika.pocket
 
 import android.content.Context
+import android.accessibilityservice.AccessibilityService
+import android.app.KeyguardManager
 import android.content.SharedPreferences
 import android.graphics.Canvas
 import android.graphics.Color
@@ -14,6 +16,7 @@ import android.hardware.SensorManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.os.SystemClock
 import android.os.Bundle
 import android.util.Log
@@ -22,6 +25,9 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import com.wangzan101.mika.R
 import com.wangzan101.mika.cap.phone.a11y.ScreenAccessibility
 import com.wangzan101.mika.i18n.tr
@@ -38,13 +44,15 @@ class PocketGuardManager(private val context: Context) : SensorEventListener, Gu
     private var monitoring = false
     private var closed = false
     private var detector = PocketDetector()
+    private var completionGate: CompletionLockGate? = null
+    private var guardSuspended = false
     private var distance = Float.NaN
     private var lux = Float.NaN
     private var guard: View? = null
     private var windowManager: WindowManager? = null
     private var owner: ScreenAccessibility? = null
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (key == ENABLED) main.post { refresh() }
+        if (key == ENABLED || key == LOCK_ON_COMPLETION) main.post { refresh() }
     }
     private val retryStart = Runnable { if (!closed) refresh() }
     private val timer = object : Runnable {
@@ -59,7 +67,9 @@ class PocketGuardManager(private val context: Context) : SensorEventListener, Gu
 
     fun setTasksActive(value: Boolean) { main.post { if (!closed) { active = value; refresh() } } }
     private fun refresh() {
-        val enabled = settings.getBoolean(ENABLED, false)
+        val guardEnabled = settings.getBoolean(ENABLED, false)
+        if (!guardEnabled) removeGuard()
+        val enabled = guardEnabled || settings.getBoolean(LOCK_ON_COMPLETION, false)
         if (!enabled || !active) main.removeCallbacks(retryStart)
         lifecycle.update(enabled, active)
     }
@@ -98,6 +108,8 @@ class PocketGuardManager(private val context: Context) : SensorEventListener, Gu
     }
 
     override fun stop() {
+        completionGate?.cancel()
+        guardSuspended = false
         main.removeCallbacks(retryStart)
         monitoring = false
         main.removeCallbacks(timer)
@@ -121,8 +133,58 @@ class PocketGuardManager(private val context: Context) : SensorEventListener, Gu
         val ready = !distance.isNaN() && !lux.isNaN() && proximity != null
         val covered = ready && distance < proximity!!.maximumRange && lux < 5f
         val away = ready && distance >= proximity!!.maximumRange
-        if (detector.update(covered, ready, away, SystemClock.elapsedRealtime())) {
+        if (!covered) completionGate?.cancel()
+        if (!guardSuspended && settings.getBoolean(ENABLED, false) && detector.update(covered, ready, away, SystemClock.elapsedRealtime())) {
             if (service == null || !showGuard(service)) detector.failed()
+        }
+    }
+
+    private fun isCovered(): Boolean = monitoring && !distance.isNaN() && !lux.isNaN() &&
+        proximity != null && distance < proximity.maximumRange && lux < 5f
+    private fun needsLock(): Boolean = context.getSystemService(PowerManager::class.java)?.isInteractive == true &&
+        context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked == false
+
+    suspend fun onTaskResumed() = withContext(Dispatchers.Main.immediate) {
+        if (guardSuspended) {
+            guardSuspended = false
+            detector = PocketDetector()
+            evaluate()
+        }
+    }
+
+    /** A waiting task may be covered later; keep watching until it resumes or the screen locks. */
+    suspend fun lockWhileWaitingIfCovered(idle: () -> Boolean) = withContext(Dispatchers.Main.immediate) {
+        while (true) {
+            if (settings.getBoolean(LOCK_ON_COMPLETION, false) && idle() && isCovered() && needsLock()) {
+                lockAfterStopIfCovered(idle)
+                if (!needsLock()) return@withContext
+            }
+            delay(100)
+        }
+    }
+
+    /** Checks while sensor monitoring is active; aborts if the task resumes or coverage changes. */
+    suspend fun lockAfterStopIfCovered(idle: () -> Boolean) = withContext(Dispatchers.Main.immediate) {
+        val gate = CompletionLockGate()
+        if (!gate.begin(settings.getBoolean(LOCK_ON_COMPLETION, false), true, idle() && needsLock(), isCovered(), SystemClock.elapsedRealtime())) return@withContext
+        completionGate?.cancel()
+        completionGate = gate
+        try {
+            repeat(10) {
+                delay(50)
+                if (gate.observe(settings.getBoolean(LOCK_ON_COMPLETION, false), idle() && needsLock(), isCovered(), SystemClock.elapsedRealtime())) {
+                    val service = ScreenAccessibility.instance.value
+                    if (service == null || !service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN)) {
+                        Log.w(TAG, "completion lock unavailable")
+                    } else {
+                        guardSuspended = true
+                        removeGuard()
+                    }
+                    return@withContext
+                }
+            }
+        } finally {
+            if (completionGate === gate) completionGate = null
         }
     }
 
@@ -165,6 +227,7 @@ class PocketGuardManager(private val context: Context) : SensorEventListener, Gu
     companion object {
         const val PREFS = "pocket_guard"
         const val ENABLED = "enabled"
+        const val LOCK_ON_COMPLETION = "lock_on_completion"
         private const val TAG = "MikaPocketGuard"
 
         fun sensorsAvailable(context: Context): Boolean {
