@@ -182,7 +182,7 @@ class CapsuleModelTest {
     @Test fun stateChangeSwitchesAtOnce() {
         model.update(inputs(run("a", running("一"))), 0)
         val v = shown(model.update(inputs(run("a", TaskState.WaitingInput("要哪个？"))), 100))
-        assertEquals("Mika 问你：要哪个？", v.text)
+        assertEquals("Jobby 问你：要哪个？", v.text)
     }
 
     // ---------- 只变宽不变窄 ----------
