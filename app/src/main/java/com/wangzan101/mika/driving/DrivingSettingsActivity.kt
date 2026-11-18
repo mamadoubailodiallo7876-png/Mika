@@ -36,7 +36,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wangzan101.mika.BuildConfig
 
 /**
  * 驾驶模式的入口页(独立的桌面图标「Jarvis Driving」):授权、开关、声音模型状态,
@@ -57,6 +56,7 @@ class DrivingSettingsActivity : ComponentActivity() {
         var btAny by remember { mutableStateOf(prefs.bluetoothAnyAudioDevice) }
         var wifiOnly by remember { mutableStateOf(prefs.wifiOnlyDownload) }
         val model by JarvisModel.status.collectAsState()
+        val wakeModel by WakeWordModel.status.collectAsState()
         val requestPermissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { refresh++ }
 
         val needed = buildList {
@@ -66,6 +66,7 @@ class DrivingSettingsActivity : ComponentActivity() {
         }
         val missing = needed.filter { refresh >= 0 && checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
         val modelReady = refresh >= 0 && JarvisModel.isReady(this)
+        val wakeModelReady = refresh >= 0 && WakeWordModel.isReady(this)
 
         Column(
             Modifier.fillMaxSize().background(Color(0xFF0A0A0A)).systemBarsPadding().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -83,9 +84,16 @@ class DrivingSettingsActivity : ComponentActivity() {
 
             Section("Wake word")
             ToggleRow("Listen for \"Jarvis\"", wakeWord) { wakeWord = it; prefs.wakeWordEnabled = it }
-            if (BuildConfig.PORCUPINE_ACCESS_KEY.isBlank()) {
-                Note("No Porcupine AccessKey in this build: add PORCUPINE_ACCESS_KEY to local.properties and rebuild. Until then use the SPEAK button.")
-            }
+            Note(
+                when {
+                    wakeModelReady -> "Wake word model installed. Say \"Hey Jarvis\" or \"Jarvis\"."
+                    wakeModel is ModelStatus.Downloading -> "Downloading wake word model… ${(wakeModel as ModelStatus.Downloading).percent}%"
+                    wakeModel is ModelStatus.WaitingForWifi -> "Waiting for Wi-Fi (about 17 MB)."
+                    wakeModel is ModelStatus.Failed -> "Wake word download failed: ${(wakeModel as ModelStatus.Failed).reason}"
+                    else -> "Wake word model not installed (about 17 MB). Use the SPEAK button until it is."
+                },
+            )
+            if (!wakeModelReady) Button(onClick = { WakeWordModel.ensure(this@DrivingSettingsActivity); refresh++ }) { Text("Download wake word model") }
 
             Section("Bluetooth trigger")
             ToggleRow("Start when a car connects", btTrigger) { btTrigger = it; prefs.bluetoothTriggerEnabled = it }

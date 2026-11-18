@@ -72,8 +72,13 @@ class DrivingService : LifecycleService() {
         tts = JarvisTTS(this)
         JarvisModel.ensure(this)
         if (DrivingPrefs.get(this).wakeWordEnabled) {
+            WakeWordModel.ensure(this)
             val manager = WakeWordManager(this).also { wake = it }
-            if (!manager.start()) Log.w(TAG, "wake word off: ${manager.error.value}")
+            lifecycleScope.launch {
+                // 模型还在下载时先不开;下好后自动开始听
+                WakeWordModel.status.first { WakeWordModel.isReady(this@DrivingService) }
+                if (!manager.start()) Log.w(TAG, "wake word off: ${manager.error.value}")
+            }
             lifecycleScope.launch {
                 manager.detections.collect {
                     if (_state.value == DrivingState.IDLE) startTurn() else manager.resume()

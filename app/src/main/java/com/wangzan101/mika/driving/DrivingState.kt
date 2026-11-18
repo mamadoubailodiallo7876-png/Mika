@@ -8,7 +8,7 @@ enum class DrivingState { IDLE, LISTENING, PROCESSING, SPEAKING }
 
 /** 驾驶模式自己的开关,和 Mika 原有设置分开存([DrivingSettingsActivity] 里改)。 */
 class DrivingPrefs private constructor(private val prefs: SharedPreferences) {
-    /** 常驻监听「Jarvis」。需要 Porcupine AccessKey;关掉后只能点屏幕上的 SPEAK。 */
+    /** 常驻监听「Jarvis」/「Hey Jarvis」(离线、不需要 Key,首次要下载约 17 MB 的模型);关掉后只能点屏幕上的 SPEAK。 */
     var wakeWordEnabled: Boolean
         get() = prefs.getBoolean(WAKE_WORD, true)
         set(v) { prefs.edit().putBoolean(WAKE_WORD, v).apply() }
@@ -23,7 +23,7 @@ class DrivingPrefs private constructor(private val prefs: SharedPreferences) {
         get() = prefs.getBoolean(BT_ANY_AUDIO, true)
         set(v) { prefs.edit().putBoolean(BT_ANY_AUDIO, v).apply() }
 
-    /** 声音模型(约 67 MB)只在不计流量的网络(Wi-Fi)下下载。 */
+    /** 声音模型(约 67 MB)和唤醒词模型(约 17 MB)只在不计流量的网络(Wi-Fi)下下载。 */
     var wifiOnlyDownload: Boolean
         get() = prefs.getBoolean(WIFI_ONLY, true)
         set(v) { prefs.edit().putBoolean(WIFI_ONLY, v).apply() }
