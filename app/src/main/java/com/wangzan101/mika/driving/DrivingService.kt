@@ -70,7 +70,8 @@ class DrivingService : LifecycleService() {
         }
         running = true
         tts = JarvisTTS(this)
-        JarvisModel.ensure(this)
+        JarvisModel.ensure(this) // Piper:既是选项,也是 Kokoro 太慢时的退路
+        if (DrivingPrefs.get(this).voiceEngine == VoiceEngine.Kokoro) KokoroModel.ensure(this)
         if (DrivingPrefs.get(this).wakeWordEnabled) {
             WakeWordModel.ensure(this)
             val manager = WakeWordManager(this).also { wake = it }

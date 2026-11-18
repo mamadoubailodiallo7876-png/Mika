@@ -58,7 +58,9 @@ class DrivingSettingsActivity : ComponentActivity() {
         var btAny by remember { mutableStateOf(prefs.bluetoothAnyAudioDevice) }
         var wifiOnly by remember { mutableStateOf(prefs.wifiOnlyDownload) }
         var alwaysOn by remember { mutableStateOf(prefs.alwaysOn) }
+        var engine by remember { mutableStateOf(prefs.voiceEngine) }
         var speed by remember { mutableFloatStateOf(prefs.voiceSpeed) }
+        val kokoroModel by KokoroModel.status.collectAsState()
         val serviceRunning by DrivingService.runningFlow.collectAsState()
         val wakeError by DrivingService.wakeError.collectAsState()
         val model by JarvisModel.status.collectAsState()
@@ -72,6 +74,8 @@ class DrivingSettingsActivity : ComponentActivity() {
         }
         val missing = needed.filter { refresh >= 0 && checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
         val modelReady = refresh >= 0 && JarvisModel.isReady(this)
+        val kokoroReady = refresh >= 0 && KokoroModel.isReady(this)
+        val tooSlow = refresh >= 0 && prefs.kokoroTooSlow
         val wakeModelReady = refresh >= 0 && WakeWordModel.isReady(this)
 
         Column(
@@ -126,13 +130,39 @@ class DrivingSettingsActivity : ComponentActivity() {
             OutlinedButton(onClick = { BluetoothTrigger.fire(this@DrivingSettingsActivity) }) { Text("Simulate car connecting") }
 
             Section("Jarvis voice")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                for (e in VoiceEngine.entries) {
+                    val label = if (e == VoiceEngine.Kokoro) "Natural (Kokoro)" else "Fast (Piper)"
+                    if (engine == e) Button(onClick = {}) { Text(label) } else OutlinedButton(onClick = {
+                        prefs.voiceEngine = e
+                        engine = e
+                        speed = prefs.voiceSpeed
+                        if (e == VoiceEngine.Kokoro) KokoroModel.ensure(this@DrivingSettingsActivity)
+                        refresh++
+                    }) { Text(label) }
+                }
+            }
             Note(
                 when {
-                    modelReady -> "Offline voice installed."
-                    model is ModelStatus.Downloading -> "Downloading… ${(model as ModelStatus.Downloading).percent}%"
-                    model is ModelStatus.WaitingForWifi -> "Waiting for Wi-Fi (about 67 MB)."
-                    model is ModelStatus.Failed -> "Download failed: ${(model as ModelStatus.Failed).reason}"
-                    else -> "Not installed (about 67 MB). The phone's built-in voice is used until it is."
+                    engine == VoiceEngine.Kokoro && tooSlow -> "Kokoro was too slow on this phone, so Jarvis switched to the fast voice. Tap Natural again to retry."
+                    engine == VoiceEngine.Kokoro && kokoroReady -> "Natural voice installed. If it can't keep up with playback on this phone, Jarvis falls back to the fast voice automatically."
+                    engine == VoiceEngine.Kokoro && kokoroModel is ModelStatus.Downloading -> "Downloading natural voice… ${(kokoroModel as ModelStatus.Downloading).percent}% (about 132 MB). The fast voice is used meanwhile."
+                    engine == VoiceEngine.Kokoro && kokoroModel is ModelStatus.WaitingForWifi -> "Waiting for Wi-Fi (about 132 MB). The fast voice is used meanwhile."
+                    engine == VoiceEngine.Kokoro && kokoroModel is ModelStatus.Failed -> "Natural voice download failed: ${(kokoroModel as ModelStatus.Failed).reason}"
+                    engine == VoiceEngine.Kokoro -> "Natural voice not installed (about 132 MB)."
+                    else -> "Using the fast voice."
+                },
+            )
+            if (engine == VoiceEngine.Kokoro && !kokoroReady) {
+                Button(onClick = { KokoroModel.ensure(this@DrivingSettingsActivity); refresh++ }) { Text("Download natural voice") }
+            }
+            Note(
+                when {
+                    modelReady -> "Fast voice installed."
+                    model is ModelStatus.Downloading -> "Downloading fast voice… ${(model as ModelStatus.Downloading).percent}%"
+                    model is ModelStatus.WaitingForWifi -> "Fast voice: waiting for Wi-Fi (about 67 MB)."
+                    model is ModelStatus.Failed -> "Fast voice download failed: ${(model as ModelStatus.Failed).reason}"
+                    else -> "Fast voice not installed (about 67 MB). The phone's built-in voice is used until a voice is installed."
                 },
             )
             Note("Speaking speed: ${"%.2f".format(speed)}x")
@@ -143,7 +173,7 @@ class DrivingSettingsActivity : ComponentActivity() {
             )
             OutlinedButton(onClick = { testVoice(speed) }) { Text("Test voice") }
             ToggleRow("Download on Wi-Fi only", wifiOnly) { wifiOnly = it; prefs.wifiOnlyDownload = it }
-            if (!modelReady) Button(onClick = { JarvisModel.ensure(this@DrivingSettingsActivity); refresh++ }) { Text("Download voice") }
+            if (!modelReady) Button(onClick = { JarvisModel.ensure(this@DrivingSettingsActivity); refresh++ }) { Text("Download fast voice") }
 
             Section("Driving mode")
             Button(onClick = { startActivity(Intent(this@DrivingSettingsActivity, DrivingActivity::class.java)) }, modifier = Modifier.fillMaxWidth()) {
