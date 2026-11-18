@@ -21,11 +21,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +57,10 @@ class DrivingSettingsActivity : ComponentActivity() {
         var btTrigger by remember { mutableStateOf(prefs.bluetoothTriggerEnabled) }
         var btAny by remember { mutableStateOf(prefs.bluetoothAnyAudioDevice) }
         var wifiOnly by remember { mutableStateOf(prefs.wifiOnlyDownload) }
+        var alwaysOn by remember { mutableStateOf(prefs.alwaysOn) }
+        var speed by remember { mutableFloatStateOf(prefs.voiceSpeed) }
+        val serviceRunning by DrivingService.runningFlow.collectAsState()
+        val wakeError by DrivingService.wakeError.collectAsState()
         val model by JarvisModel.status.collectAsState()
         val wakeModel by WakeWordModel.status.collectAsState()
         val requestPermissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { refresh++ }
@@ -80,6 +86,25 @@ class DrivingSettingsActivity : ComponentActivity() {
             } else {
                 Note("Missing: " + missing.joinToString { it.substringAfterLast('.') })
                 Button(onClick = { requestPermissions.launch(missing.toTypedArray()) }) { Text("Grant permissions") }
+            }
+
+            Section("Always listening")
+            ToggleRow("Listen for \"Hey Jarvis\" in the background", alwaysOn) {
+                alwaysOn = it
+                prefs.alwaysOn = it
+                if (it) DrivingService.start(this@DrivingSettingsActivity) else DrivingService.stop(this@DrivingSettingsActivity)
+            }
+            Note(
+                when {
+                    serviceRunning && wakeError != null -> "Running, but the wake word is off: $wakeError"
+                    serviceRunning && wakeWord -> "Listening now. The microphone stays on and uses battery."
+                    serviceRunning -> "Running (wake word turned off below; use the SPEAK button)."
+                    alwaysOn -> "Not running right now. It starts when Mika opens; after a reboot tap the notification."
+                    else -> "Off."
+                },
+            )
+            if (!serviceRunning) {
+                Button(onClick = { DrivingService.start(this@DrivingSettingsActivity) }) { Text("Start listening now") }
             }
 
             Section("Wake word")
@@ -110,6 +135,13 @@ class DrivingSettingsActivity : ComponentActivity() {
                     else -> "Not installed (about 67 MB). The phone's built-in voice is used until it is."
                 },
             )
+            Note("Speaking speed: ${"%.2f".format(speed)}x")
+            Slider(
+                value = speed, onValueChange = { speed = it },
+                onValueChangeFinished = { prefs.voiceSpeed = speed },
+                valueRange = JarvisTTS.MIN_SPEED..JarvisTTS.MAX_SPEED,
+            )
+            OutlinedButton(onClick = { testVoice(speed) }) { Text("Test voice") }
             ToggleRow("Download on Wi-Fi only", wifiOnly) { wifiOnly = it; prefs.wifiOnlyDownload = it }
             if (!modelReady) Button(onClick = { JarvisModel.ensure(this@DrivingSettingsActivity); refresh++ }) { Text("Download voice") }
 
@@ -118,6 +150,21 @@ class DrivingSettingsActivity : ComponentActivity() {
                 Text("Start driving mode")
             }
         }
+    }
+
+    private var testTts: JarvisTTS? = null
+
+    /** 按此刻滑块上的速度念一句,听听效果。 */
+    private fun testVoice(speed: Float) {
+        DrivingPrefs.get(this).voiceSpeed = speed
+        val tts = testTts ?: JarvisTTS(this).also { testTts = it }
+        tts.stop()
+        tts.enqueue("Good evening. Your next meeting is at three p.m., and the traffic on your route looks clear.", isFinal = true)
+    }
+
+    override fun onDestroy() {
+        testTts?.shutdown()
+        super.onDestroy()
     }
 
     @Composable

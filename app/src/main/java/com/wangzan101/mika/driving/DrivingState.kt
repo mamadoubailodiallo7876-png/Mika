@@ -13,6 +13,19 @@ class DrivingPrefs private constructor(private val prefs: SharedPreferences) {
         get() = prefs.getBoolean(WAKE_WORD, true)
         set(v) { prefs.edit().putBoolean(WAKE_WORD, v).apply() }
 
+    /**
+     * 常驻:Mika 一启动就让 Jarvis 在后台听唤醒词(不用先点「驾驶模式」)。常驻通知可见,麦克风一直开着,会耗电。
+     * 重启手机后安卓不允许后台直接开麦克风,所以开机后是一条点一下就恢复的通知。
+     */
+    var alwaysOn: Boolean
+        get() = prefs.getBoolean(ALWAYS_ON, true)
+        set(v) { prefs.edit().putBoolean(ALWAYS_ON, v).apply() }
+
+    /** Jarvis 说话的速度,1.0 是模型的原速,大于 1 更快。 */
+    var voiceSpeed: Float
+        get() = prefs.getFloat(VOICE_SPEED, JarvisTTS.DEFAULT_SPEED).coerceIn(JarvisTTS.MIN_SPEED, JarvisTTS.MAX_SPEED)
+        set(v) { prefs.edit().putFloat(VOICE_SPEED, v.coerceIn(JarvisTTS.MIN_SPEED, JarvisTTS.MAX_SPEED)).apply() }
+
     /** 连上车载蓝牙时自动进入驾驶模式。 */
     var bluetoothTriggerEnabled: Boolean
         get() = prefs.getBoolean(BT_TRIGGER, true)
@@ -30,6 +43,8 @@ class DrivingPrefs private constructor(private val prefs: SharedPreferences) {
 
     companion object {
         private const val WAKE_WORD = "wake_word"
+        private const val ALWAYS_ON = "always_on"
+        private const val VOICE_SPEED = "voice_speed"
         private const val BT_TRIGGER = "bt_trigger"
         private const val BT_ANY_AUDIO = "bt_any_audio"
         private const val WIFI_ONLY = "wifi_only"

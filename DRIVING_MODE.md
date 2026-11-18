@@ -82,10 +82,26 @@ Two things you will notice:
   `auto` and `radio` match names such as "Carrie's AirPods". Turn off "Any Bluetooth audio device counts" to rely on
   names only.
 
-## 4. Adjusting the voice speed
+## 4. Voice speed
 
-`JarvisTTS.DEFAULT_SPEED = 0.92f` in `driving/JarvisTTS.kt`. `1.0f` is the model's natural speed, lower is slower.
-It is also a runtime property (`tts.speed`) and is applied to the fallback voice too.
+On the **Jarvis Driving** screen there is a speed slider (0.7x to 1.6x) and a **Test voice** button. The default is
+`JarvisTTS.DEFAULT_SPEED = 1.15f` (the Alan voice is slow at its natural 1.0). It applies to the fallback voice too.
+Synthesis itself is fast (about 20x faster than real time on a desktop CPU); if answers feel slow, most of the delay is
+Mika's own task running, not the voice. The much more natural Kokoro voices were tested and are about as slow as real
+time even on a desktop CPU, so they are not usable on a phone.
+
+## 5. Always listening (not just in driving mode)
+
+The wake word runs inside `DrivingService`. With **Listen for "Hey Jarvis" in the background** on (default), the service
+starts whenever Mika's process starts, so you do not need to open driving mode. When it is not in driving mode the
+prompt sent to Mika does not include the "keep it short, no screen work" driving instructions beyond asking for a short
+spoken answer.
+
+- **After a reboot** Android does not allow a background app to start a microphone service, so you get a notification:
+  tap it to resume. Opening Mika also resumes it.
+- It keeps a persistent notification and the microphone open: expect extra battery use.
+- Some phones' battery savers kill background services; exempt Mika from battery optimisation if it stops listening.
+- Turn it off with the same switch (also stops the service now).
 
 ## Android Auto
 
@@ -121,7 +137,8 @@ Limitations you should know about:
 | `SentenceSplitter.kt` | Strips Markdown, splits an answer into short spoken sentences |
 | `DrivingService.kt` | Foreground service (microphone), state machine, STT → Mika task → TTS |
 | `DrivingActivity.kt`, `DrivingScreen.kt` | Full-screen Compose UI |
-| `DrivingSettingsActivity.kt` | Launcher entry: permissions, toggles, test buttons |
+| `DrivingSettingsActivity.kt` | Launcher entry: permissions, toggles, voice speed, test buttons |
+| `JarvisBoot.kt` | Boot notification and the no-UI trampoline that resumes listening |
 | `BluetoothTrigger.kt` | `ACL_CONNECTED` receiver |
 | `JarvisCarAppService.kt` | Android Auto service and `MainCarScreen` |
 | `DrivingState.kt`, `DrivingNotifications.kt` | State enum and prefs; notifications |

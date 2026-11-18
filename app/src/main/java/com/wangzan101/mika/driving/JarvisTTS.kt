@@ -40,7 +40,7 @@ import kotlin.coroutines.resume
  * 一句话一次 `generate()`,按先后进队列:第一句在播的时候,下一句已经在后台合成(流水线),缩短句间停顿。
  * 模型还没下好、或引擎起不来时,退回安卓自带的 TextToSpeech,朗读不会因此哑掉。
  *
- * 语速:改 [DEFAULT_SPEED](1.0 是原速,小于 1 更慢)。
+ * 语速:在「Jarvis Driving」页里调(存在 [DrivingPrefs.voiceSpeed]),默认 [DEFAULT_SPEED]。
  */
 class JarvisTTS(
     context: Context,
@@ -49,8 +49,9 @@ class JarvisTTS(
 ) {
     private val app = context.applicationContext
 
+    /** 语速。每次开口前按设置里的值刷新(见 [DrivingPrefs.voiceSpeed]);也可以直接改。 */
     @Volatile
-    var speed: Float = DEFAULT_SPEED
+    var speed: Float = DrivingPrefs.get(context).voiceSpeed
 
     private class Item(val text: String, val isFinal: Boolean, val onStart: (() -> Unit)?) {
         val done = CompletableDeferred<Boolean>()
@@ -86,6 +87,7 @@ class JarvisTTS(
 
     /** 排进朗读队列并立刻返回;结果为 true = 这一句播完了,false = 被 [stop] 打断。[onStart] 在这一句开始播时调。 */
     fun enqueue(text: String, isFinal: Boolean = false, onStart: (() -> Unit)? = null): Deferred<Boolean> {
+        speed = DrivingPrefs.get(app).voiceSpeed
         val item = Item(SentenceSplitter.clean(text), isFinal, onStart)
         if (item.text.isEmpty()) {
             if (isFinal) onSpeakingDone()
@@ -291,8 +293,10 @@ class JarvisTTS(
     companion object {
         private const val TAG = "JarvisTTS"
 
-        /** 默认语速:略慢于原速,更像管家。想快点改成 1.0f。 */
-        const val DEFAULT_SPEED = 0.92f
+        /** 默认语速。这个声音原速偏慢,稍微加快听着更自然;设置页里可以调。 */
+        const val DEFAULT_SPEED = 1.15f
+        const val MIN_SPEED = 0.7f
+        const val MAX_SPEED = 1.6f
 
         private const val CHUNK = 4096
 
