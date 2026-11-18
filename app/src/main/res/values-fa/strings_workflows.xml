@@ -33,7 +33,7 @@
     <string name="workflow_delete_template">این الگو حذف شود؟</string>
     <string name="workflow_step_number">مرحله %1$d</string>
     <string name="workflow_step_name">نام مرحله</string>
-    <string name="workflow_instruction">Mika چه کاری انجام دهد؟</string>
+    <string name="workflow_instruction">Jarvis چه کاری انجام دهد؟</string>
     <string name="workflow_move_up">بالا</string>
     <string name="workflow_move_down">پایین</string>
     <string name="workflow_add_step">افزودن مرحله</string>

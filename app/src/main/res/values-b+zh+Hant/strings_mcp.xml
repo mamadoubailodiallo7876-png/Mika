@@ -56,7 +56,7 @@
     <string name="mcp_usb_client">3. 設定 MCP 用戶端</string>
     <string name="mcp_usb_client_sub">啟動命令會在電腦顯示位址和權杖。填入用戶端並連線，確認頂部請求時間更新。</string>
     <string name="mcp_copy_instructions">複製設定說明</string>
-    <string name="mcp_usb_client_instructions">在電腦的 MCP 用戶端新增 Streamable HTTP 伺服器，位址 http://127.0.0.1:%1$d/mcp。Authorization 請求標頭使用 Bearer 加上 Mika 啟動命令在電腦輸出的權杖，不要將權杖貼回對話。連線或重新整理工具清單後，確認手機頂部請求時間更新。指南：https://github.com/wangzan101/Mika/blob/main/docs/mcp.md</string>
+    <string name="mcp_usb_client_instructions">在電腦的 MCP 用戶端新增 Streamable HTTP 伺服器，位址 http://127.0.0.1:%1$d/mcp。Authorization 請求標頭使用 Bearer 加上 Jarvis 啟動命令在電腦輸出的權杖，不要將權杖貼回對話。連線或重新整理工具清單後，確認手機頂部請求時間更新。指南：https://github.com/wangzan101/Mika/blob/main/docs/mcp.md</string>
     <string name="mcp_network_enable">允許透過網路連線</string>
     <string name="mcp_network_enable_action">開啟網路存取</string>
     <string name="mcp_network_address_step">1. 選擇電腦能存取的位址</string>

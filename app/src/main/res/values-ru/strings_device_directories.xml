@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="device_dirs_title">Папки устройства</string>
-    <string name="device_dirs_explanation">Подсказки помогают Mika находить файлы. Добавление подсказки не даёт доступа; разрешите доступ к каждой сохранённой папке отдельно.</string>
+    <string name="device_dirs_explanation">Подсказки помогают Jarvis находить файлы. Добавление подсказки не даёт доступа; разрешите доступ к каждой сохранённой папке отдельно.</string>
     <string name="device_dirs_authorize">Разрешить чтение этой папки</string>
     <string name="device_dirs_recursive">Включая вложенные папки</string>
     <string name="device_dirs_not_synced">Разрешение не синхронизировано</string>
@@ -24,8 +24,8 @@
     <string name="device_dirs_denied">Доступ запрещён</string>
     <string name="device_dirs_unknown">Статус недоступен</string>
     <string name="device_dirs_entry">Подсказки о папках</string>
-    <string name="device_dirs_entry_sub">Помогают Mika находить скачанные файлы</string>
+    <string name="device_dirs_entry_sub">Помогают Jarvis находить скачанные файлы</string>
     <string name="device_dirs_source_preset">Предустановлено</string>
     <string name="device_dirs_source_user">Изменено вами</string>
-    <string name="device_dirs_source_mika">Изменено Mika</string>
+    <string name="device_dirs_source_mika">Изменено Jarvis</string>
 </resources>

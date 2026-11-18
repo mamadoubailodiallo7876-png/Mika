@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="persona_title">Персона</string>
-    <string name="persona_sub">Выберите, как Mika говорит с вами</string>
+    <string name="persona_sub">Выберите, как Jarvis говорит с вами</string>
     <string name="persona_default">По умолчанию</string>
-    <string name="persona_default_sub">Обычный голос Mika</string>
+    <string name="persona_default_sub">Обычный голос Jarvis</string>
     <string name="persona_empty">Персон пока нет</string>
-    <string name="persona_empty_sub">Персона меняет то, как Mika говорит, а не то, что он может делать.</string>
+    <string name="persona_empty_sub">Персона меняет то, как Jarvis говорит, а не то, что он может делать.</string>
     <string name="persona_new">Новая персона</string>
     <string name="persona_edit">Изменить персону</string>
     <string name="persona_name">Название</string>
@@ -16,7 +16,7 @@
     <string name="persona_counter">%1$d символов · около %2$d токенов</string>
     <string name="persona_preview">Предпросмотр полного запроса</string>
     <string name="persona_preview_hide">Скрыть предпросмотр</string>
-    <string name="persona_preview_note">Серые правила неизменны. Персона может менять тон и формулировки, но не безопасность, разрешения и то, что Mika сообщает.</string>
+    <string name="persona_preview_note">Серые правила неизменны. Персона может менять тон и формулировки, но не безопасность, разрешения и то, что Jarvis сообщает.</string>
     <string name="persona_chip">Персона: %1$s</string>
     <string name="persona_manage">Управление персонами</string>
     <string name="persona_switch_note">Переключение влияет только на следующие сообщения в этом чате.</string>

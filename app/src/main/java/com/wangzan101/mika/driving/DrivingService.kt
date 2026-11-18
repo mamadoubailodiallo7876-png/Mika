@@ -172,8 +172,8 @@ class DrivingService : LifecycleService() {
 
         fun failureMessage(): String = when (this) {
             is Failed -> when (why) {
-                is SpeechFailure.NoPermission -> "I need microphone permission. Please open Mika when you can."
-                is SpeechFailure.Unavailable -> "Speech recognition isn't available. Check Mika's voice settings."
+                is SpeechFailure.NoPermission -> "I need microphone permission. Please open Jarvis when you can."
+                is SpeechFailure.Unavailable -> "Speech recognition isn't available. Check Jarvis's voice settings."
                 is SpeechFailure.Network -> "I can't reach the speech service right now."
                 else -> "Sorry, I couldn't hear you."
             }
@@ -207,7 +207,10 @@ class DrivingService : LifecycleService() {
             var failure: SpeechFailure? = null
             session.events.collect { event ->
                 when (event) {
-                    is SpeechEvent.Level -> if (event.value > VOICE_LEVEL) { spoke = true; lastActivity = System.currentTimeMillis() }
+                    is SpeechEvent.Level -> {
+                        _level.value = event.value
+                        if (event.value > VOICE_LEVEL) { spoke = true; lastActivity = System.currentTimeMillis() }
+                    }
                     is SpeechEvent.Partial -> {
                         val t = (event.stable + event.tail).trim()
                         if (t.isNotEmpty()) {
@@ -231,6 +234,7 @@ class DrivingService : LifecycleService() {
         } finally {
             ticker.cancel()
             session.cancel()
+            _level.value = 0f
         }
     }
 
@@ -277,7 +281,7 @@ class DrivingService : LifecycleService() {
                 else -> {
                     // 确认花钱、接管、被卡住:行车中不自动同意任何东西
                     TaskService.cancel(app)
-                    return "That needs you at the phone, so I've stopped. Please pull over and open Mika."
+                    return "That needs you at the phone, so I've stopped. Please pull over and open Jarvis."
                 }
             }
         }
@@ -358,6 +362,10 @@ class DrivingService : LifecycleService() {
 
         /** 同上,给界面观察。 */
         val runningFlow: StateFlow<Boolean> = _running.asStateFlow()
+
+        private val _level = MutableStateFlow(0f)
+        /** 听的时候麦克风音量 0..1(给界面的声波用)。 */
+        val level: StateFlow<Float> = _level.asStateFlow()
 
         private val _wakeError = MutableStateFlow<String?>(null)
         /** 唤醒词起不来的原因(模型没下好、没权限……);正常或没开唤醒词时为 null。 */

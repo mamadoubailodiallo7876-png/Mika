@@ -164,7 +164,7 @@
     <string name="signin_openrouter_authorize">صدور مجوز در OpenRouter</string>
     <string name="signin_openrouter_waiting">در مرورگر تأیید کنید و سپس به میکا برگردید.</string>
     <string name="signin_openrouter_manage">باز کردن صفحهٔ Keys در OpenRouter</string>
-    <string name="signin_openrouter_signed_in_note">مصرف از موجودی OpenRouter شما کسر می‌شود. کلید در این گوشی رمزگذاری و ذخیره می‌شود؛ برای توقف استفاده، کلید «Mika» را در صفحهٔ Keys ‏OpenRouter حذف کنید.</string>
+    <string name="signin_openrouter_signed_in_note">مصرف از موجودی OpenRouter شما کسر می‌شود. کلید در این گوشی رمزگذاری و ذخیره می‌شود؛ برای توقف استفاده، کلید «Jarvis» را در صفحهٔ Keys ‏OpenRouter حذف کنید.</string>
     <string name="signin_openrouter_signed_out_note">کلید از این گوشی حذف شد، اما همچنان در OpenRouter وجود دارد؛ آن را در صفحهٔ Keys حذف کنید. انتخاب مدل‌ها حفظ می‌شود.</string>
     <string name="signin_set_main">تنظیم به‌عنوان مدل اصلی</string>
     <string name="signin_set_main_note">میکا از آن برای انجام کارها استفاده می‌کند</string>
@@ -204,9 +204,9 @@
     <string name="main_fallback_failed">Could not set the fallback model</string>
     <string name="main_fallback_is_main">This is the current main model, so it cannot also be its fallback</string>
     <string name="role_voice">Voice model</string>
-    <string name="role_voice_what">Lets Mika speak and read answers aloud</string>
-    <string name="voice_hint">Mika can read answers aloud and say a line with your own speech model. Text is sent to the service you pick.</string>
-    <string name="voice_enable">Allow Mika to speak</string>
+    <string name="role_voice_what">Lets Jarvis speak and read answers aloud</string>
+    <string name="voice_hint">Jarvis can read answers aloud and say a line with your own speech model. Text is sent to the service you pick.</string>
+    <string name="voice_enable">Allow Jarvis to speak</string>
     <string name="voice_enable_note">Speech is only made when you tap Read aloud, unless auto-read is on</string>
     <string name="voice_provider">Service</string>
     <string name="voice_no_providers">Add a model service first (speech uses the same service and key).</string>
@@ -217,7 +217,7 @@
     <string name="voice_name">Voice</string>
     <string name="voice_speed">Speed</string>
     <string name="voice_auto_read">Read every answer aloud</string>
-    <string name="voice_speak_tool">Let Mika speak on its own</string>
+    <string name="voice_speak_tool">Let Jarvis speak on its own</string>
     <string name="voice_max_chars">Longest read (characters)</string>
     <string name="voice_test">Say a test line</string>
     <string name="voice_testing">Making a test line…</string>

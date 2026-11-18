@@ -33,7 +33,7 @@
     <string name="workflow_delete_template">Excluir este modelo?</string>
     <string name="workflow_step_number">Etapa %1$d</string>
     <string name="workflow_step_name">Nome da etapa</string>
-    <string name="workflow_instruction">O que Mika deve fazer?</string>
+    <string name="workflow_instruction">O que Jarvis deve fazer?</string>
     <string name="workflow_move_up">Mover para cima</string>
     <string name="workflow_move_down">Mover para baixo</string>
     <string name="workflow_add_step">Adicionar etapa</string>

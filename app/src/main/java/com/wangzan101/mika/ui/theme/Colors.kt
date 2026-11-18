@@ -106,45 +106,48 @@ val LightColors = MikaColors(
     isDark = false,
 )
 
+/**
+ * 深色就是 Jarvis 的 HUD 配色(暂定值,见 DESIGN 说明):近黑的深海军蓝做底,青色发光线做描边和强调,
+ * 冰白文字,金色表示「需要你」,钢铁红表示出错。卡片靠青色细线而不是阴影。
+ */
 val DarkColors = MikaColors(
-    bg = Color(0xFF0E0E10),
-    surface = Color(0xFF1A1A1D),
-    fill = Color(0x0FFFFFFF),
-    ink = Color(0xFFF2F2F4),
-    ink2 = Color(0xFFA4A5AD),
-    ink3 = Color(0xFF6C6D75),
-    hair = Color(0x14FFFFFF),
-    edge = Color(0x0FFFFFFF),
-    accent = Color(0xFF3D97FF),
-    accentSoft = Color(0x293D97FF),
-    onAccent = Color(0xFFFFFFFF),
-    ok = Color(0xFF3CCF7A),
-    okSoft = Color(0x243CCF7A),
-    warn = Color(0xFFFFB340),
-    warnSolid = Color(0xFFFF9F0A),
-    warnSoft = Color(0x29FF9F0A),
-    bad = Color(0xFFFF6961),
-    badSoft = Color(0x24FF6961),
-    neutralSoft = Color(0x12FFFFFF),
-    answer = Color(0x0DFFFFFF),
-    greySoft = Color(0x38767680),
-    glass = Color(0xB81A1A1D),
-    glassEdge = Color(0x14FFFFFF),
+    bg = Color(0xFF05090F),
+    surface = Color(0xFF0F1F30),
+    fill = Color(0x1429D8FF),
+    ink = Color(0xFFE6F6FF),
+    ink2 = Color(0xFF8FB4C8),
+    ink3 = Color(0xFF5E8296),
+    hair = Color(0x2229D8FF),
+    edge = Color(0x3329D8FF),
+    accent = Color(0xFF29D8FF),
+    accentSoft = Color(0x2929D8FF),
+    onAccent = Color(0xFF031018),
+    ok = Color(0xFF3DDC97),
+    okSoft = Color(0x243DDC97),
+    warn = Color(0xFFFFC233),
+    warnSolid = Color(0xFFFFB300),
+    warnSoft = Color(0x29FFB300),
+    bad = Color(0xFFFF5A4F),
+    badSoft = Color(0x24FF5A4F),
+    neutralSoft = Color(0x1229D8FF),
+    answer = Color(0x0F29D8FF),
+    greySoft = Color(0x3B5E8296),
+    glass = Color(0xCC0F1F30),
+    glassEdge = Color(0x4029D8FF),
     cardShadow = Color.Transparent,
     floatShadow = Color(0xFF000000),
-    thumb = Color(0xFFFFFFFF),
-    series = listOf(Color(0xFF3987E5), Color(0xFFD95926), Color(0xFF199E70)),
-    seriesOther = Color(0xFF5A5B62),
-    grid = Color(0x12FFFFFF),
+    thumb = Color(0xFFE6F6FF),
+    series = listOf(Color(0xFF29D8FF), Color(0xFFFFB300), Color(0xFFFF5A4F)),
+    seriesOther = Color(0xFF4B6676),
+    grid = Color(0x1429D8FF),
     isDark = true,
 )
 
-/** 按深浅色和强调色取整套颜色。蓝色就是 [LightColors] / [DarkColors] 本身;别的颜色只换强调色那三项。 */
+/** 按深浅色和强调色取整套颜色。强调色就是底色本来的那个时用底色本身;别的颜色只换强调色那三项。 */
 fun palette(dark: Boolean, accent: ThemeAccent): MikaColors {
     val base = if (dark) DarkColors else LightColors
-    if (accent == ThemeAccent.Blue) return base
     val (color, on) = accentTone(accent, dark)
-    return base.withAccent(color, on)
+    return if (color == base.accent && on == base.onAccent) base else base.withAccent(color, on)
 }
 
 /**
@@ -152,7 +155,11 @@ fun palette(dark: Boolean, accent: ThemeAccent): MikaColors {
  * 文字的对比度不低于默认蓝色,和页面背景的对比度不低于 3:1(见 `AccentPaletteTest`)。
  */
 fun accentTone(accent: ThemeAccent, dark: Boolean): Pair<Color, Color> = when (accent) {
-    ThemeAccent.Blue -> (if (dark) DarkColors else LightColors).let { it.accent to it.onAccent }
+    // 默认:方舟反应堆的青色。深色下就是 HUD 底色自带的那个
+    ThemeAccent.Reactor -> if (dark) DarkColors.accent to DarkColors.onAccent else Color(0xFF007C99) to Color.White
+    ThemeAccent.Gold -> if (dark) Color(0xFFFFC233) to Color(0xFF1A1200) else Color(0xFF8A5F00) to Color.White
+    ThemeAccent.Crimson -> if (dark) Color(0xFFFF5A4F) to Color(0xFF1A0000) else Color(0xFFC62828) to Color.White
+    ThemeAccent.Blue -> if (dark) Color(0xFF3D97FF) to Color.White else LightColors.accent to LightColors.onAccent
     ThemeAccent.Indigo -> Color(if (dark) 0xFF7D7AFF else 0xFF5856D6) to Color.White
     ThemeAccent.Purple -> Color(if (dark) 0xFFBF5AF2 else 0xFF9B3FD9) to Color.White
     ThemeAccent.Pink -> Color(if (dark) 0xFFFF4F80 else 0xFFE0306A) to Color.White

@@ -14,7 +14,7 @@
     <string name="checklist_content">محتوا</string>
     <string name="checklist_delete_question">فهرست و تاریخچه حذف شود؟</string>
     <string name="checklist_supplement">اطلاعات تکمیلی</string>
-    <string name="checklist_next">Mika در ادامه چه کاری انجام دهد؟</string>
+    <string name="checklist_next">Jarvis در ادامه چه کاری انجام دهد؟</string>
     <string name="checklist_fill_input">پر کردن کادر ورودی</string>
     <string name="checklist_previous_title">عنوان قبلی: %1$s</string>
     <string name="checklist_added">افزوده یا بازنویسی‌شده</string>

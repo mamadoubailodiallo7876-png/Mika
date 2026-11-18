@@ -26,10 +26,10 @@
     <string name="export_no_messages">没有可导出的消息</string>
     <string name="export_current_turn">正在进行的这一轮不参与导出。</string>
     <string name="export_warnings">有 %1$d 项没能带上。</string>
-    <string name="export_filename_fallback">Mika 对话</string>
+    <string name="export_filename_fallback">Jarvis 对话</string>
 
     <string name="export_label_user">用户</string>
-    <string name="export_label_mika">Mika</string>
+    <string name="export_label_mika">Jarvis</string>
     <string name="export_label_steer">任务中途的话</string>
     <string name="export_label_answer">回答</string>
     <string name="export_label_tool_steps">工具步骤</string>

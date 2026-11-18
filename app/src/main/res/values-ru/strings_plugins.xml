@@ -4,7 +4,7 @@
     <string name="plugins_install">Установить плагин</string>
     <string name="plugins_installing">Установка…</string>
     <string name="plugins_empty">Плагинов пока нет</string>
-    <string name="plugins_empty_sub">Установите zip плагина, чтобы добавить навыки, которые Mika сможет читать. Плагин не может менять настройки приложения или читать другие ваши данные.</string>
+    <string name="plugins_empty_sub">Установите zip плагина, чтобы добавить навыки, которые Jarvis сможет читать. Плагин не может менять настройки приложения или читать другие ваши данные.</string>
     <string name="plugins_enabled">Включён</string>
     <string name="plugins_disabled">Отключён</string>
     <string name="plugins_skills">Навыки</string>
@@ -16,7 +16,7 @@
     <string name="plugins_uninstall_body">Удалить этот плагин и его навыки? Диалоги и память не затрагиваются.</string>
     <string name="plugins_install_failed">Не удалось установить: %1$s</string>
     <string name="plugins_unsupported_in_version">Эта версия поддерживает только плагины с навыками.</string>
-    <string name="plugins_error_too_new">Этому плагину нужна более новая версия Mika.</string>
+    <string name="plugins_error_too_new">Этому плагину нужна более новая версия Jarvis.</string>
     <string name="plugins_error_unsafe">В пакете есть небезопасный путь, установка отклонена.</string>
     <string name="plugins_error_too_large">Пакет слишком большой.</string>
     <string name="plugins_error_missing_manifest">В корне пакета нет manifest.json.</string>

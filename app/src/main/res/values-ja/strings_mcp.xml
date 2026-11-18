@@ -56,7 +56,7 @@
     <string name="mcp_usb_client">3. MCP クライアントを設定</string>
     <string name="mcp_usb_client_sub">開始コマンドが、パソコンにアドレスとトークンを表示します。それをクライアントに追加し、上のリクエスト時刻が更新されるか確認してください。</string>
     <string name="mcp_copy_instructions">設定手順をコピー</string>
-    <string name="mcp_usb_client_instructions">このパソコンで、http://127.0.0.1:%1$d/mcp に Streamable HTTP の MCP サーバーを追加してください。Authorization ヘッダーには、Mika の開始コマンドが表示したトークンを Bearer に続けて設定します。会話にトークンを表示しないでください。接続するかツール一覧を更新して、スマホのリクエスト時刻が更新されるか確認してください。ガイド: https://github.com/wangzan101/Mika/blob/main/docs/mcp.en.md</string>
+    <string name="mcp_usb_client_instructions">このパソコンで、http://127.0.0.1:%1$d/mcp に Streamable HTTP の MCP サーバーを追加してください。Authorization ヘッダーには、Jarvis の開始コマンドが表示したトークンを Bearer に続けて設定します。会話にトークンを表示しないでください。接続するかツール一覧を更新して、スマホのリクエスト時刻が更新されるか確認してください。ガイド: https://github.com/wangzan101/Mika/blob/main/docs/mcp.en.md</string>
     <string name="mcp_network_enable">このネットワーク接続を許可</string>
     <string name="mcp_network_enable_action">ネットワークアクセスを有効にする</string>
     <string name="mcp_network_address_step">1. 届くアドレスを選択</string>

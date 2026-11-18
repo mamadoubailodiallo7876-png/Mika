@@ -34,11 +34,11 @@ class ToolApprovalNotifier(context: Context) {
         val shownName = request.label?.takeIf { it.isNotBlank() } ?: request.tool
         val public = Notification.Builder(app, CHANNEL)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Mika needs your approval")
+            .setContentTitle("Jarvis needs your approval")
             .build()
         val n = Notification.Builder(app, CHANNEL)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Mika wants to use: $shownName")
+            .setContentTitle("Jarvis wants to use: $shownName")
             .setContentText(request.reason ?: request.args)
             .setStyle(Notification.BigTextStyle().bigText(body))
             .setCategory(Notification.CATEGORY_ALARM)

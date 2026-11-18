@@ -33,7 +33,7 @@
     <string name="workflow_delete_template">Hapus templat tugas ini?</string>
     <string name="workflow_step_number">Langkah %1$d</string>
     <string name="workflow_step_name">Nama langkah</string>
-    <string name="workflow_instruction">Apa yang harus Mika lakukan?</string>
+    <string name="workflow_instruction">Apa yang harus Jarvis lakukan?</string>
     <string name="workflow_move_up">Naik</string>
     <string name="workflow_move_down">Turun</string>
     <string name="workflow_add_step">Tambah langkah</string>

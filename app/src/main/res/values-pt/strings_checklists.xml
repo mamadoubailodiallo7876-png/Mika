@@ -14,7 +14,7 @@
     <string name="checklist_content">Conteúdo</string>
     <string name="checklist_delete_question">Excluir a lista e seu histórico?</string>
     <string name="checklist_supplement">Informações adicionais</string>
-    <string name="checklist_next">O que Mika deve fazer depois?</string>
+    <string name="checklist_next">O que Jarvis deve fazer depois?</string>
     <string name="checklist_fill_input">Preencher entrada</string>
     <string name="checklist_previous_title">Título anterior: %1$s</string>
     <string name="checklist_added">Adicionado ou reescrito</string>

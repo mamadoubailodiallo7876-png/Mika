@@ -19,8 +19,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -78,18 +78,20 @@ class DrivingSettingsActivity : ComponentActivity() {
         val tooSlow = refresh >= 0 && prefs.kokoroTooSlow
         val wakeModelReady = refresh >= 0 && WakeWordModel.isReady(this)
 
+        HudBackground {
         Column(
-            Modifier.fillMaxSize().background(Color(0xFF0A0A0A)).systemBarsPadding().verticalScroll(rememberScrollState()).padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().systemBarsPadding().verticalScroll(rememberScrollState()).padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Jarvis Driving", color = Color(0xFF00E5FF), fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Text("J.A.R.V.I.S.", color = Hud.Cyan, style = Hud.label(26).copy(fontWeight = FontWeight.Bold, letterSpacing = 7.sp))
+            HudLabel("Voice and driving control", dot = Hud.Cyan)
 
             Section("Permissions")
             if (missing.isEmpty()) {
                 Note("Microphone, Bluetooth and notifications are all granted.")
             } else {
                 Note("Missing: " + missing.joinToString { it.substringAfterLast('.') })
-                Button(onClick = { requestPermissions.launch(missing.toTypedArray()) }) { Text("Grant permissions") }
+                HudButton(onClick = { requestPermissions.launch(missing.toTypedArray()) }) { Text("Grant permissions") }
             }
 
             Section("Always listening")
@@ -103,12 +105,12 @@ class DrivingSettingsActivity : ComponentActivity() {
                     serviceRunning && wakeError != null -> "Running, but the wake word is off: $wakeError"
                     serviceRunning && wakeWord -> "Listening now. The microphone stays on and uses battery."
                     serviceRunning -> "Running (wake word turned off below; use the SPEAK button)."
-                    alwaysOn -> "Not running right now. It starts when Mika opens; after a reboot tap the notification."
+                    alwaysOn -> "Not running right now. It starts when Jarvis opens; after a reboot tap the notification."
                     else -> "Off."
                 },
             )
             if (!serviceRunning) {
-                Button(onClick = { DrivingService.start(this@DrivingSettingsActivity) }) { Text("Start listening now") }
+                HudButton(onClick = { DrivingService.start(this@DrivingSettingsActivity) }) { Text("Start listening now") }
             }
 
             Section("Wake word")
@@ -122,18 +124,18 @@ class DrivingSettingsActivity : ComponentActivity() {
                     else -> "Wake word model not installed (about 17 MB). Use the SPEAK button until it is."
                 },
             )
-            if (!wakeModelReady) Button(onClick = { WakeWordModel.ensure(this@DrivingSettingsActivity); refresh++ }) { Text("Download wake word model") }
+            if (!wakeModelReady) HudButton(onClick = { WakeWordModel.ensure(this@DrivingSettingsActivity); refresh++ }) { Text("Download wake word model") }
 
             Section("Bluetooth trigger")
             ToggleRow("Start when a car connects", btTrigger) { btTrigger = it; prefs.bluetoothTriggerEnabled = it }
             ToggleRow("Any Bluetooth audio device counts (includes headphones)", btAny) { btAny = it; prefs.bluetoothAnyAudioDevice = it }
-            OutlinedButton(onClick = { BluetoothTrigger.fire(this@DrivingSettingsActivity) }) { Text("Simulate car connecting") }
+            HudButton(tone = HudTone.Quiet, onClick = { BluetoothTrigger.fire(this@DrivingSettingsActivity) }) { Text("Simulate car connecting") }
 
             Section("Jarvis voice")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (e in VoiceEngine.entries) {
                     val label = if (e == VoiceEngine.Kokoro) "Natural (Kokoro)" else "Fast (Piper)"
-                    if (engine == e) Button(onClick = {}) { Text(label) } else OutlinedButton(onClick = {
+                    if (engine == e) HudButton(onClick = {}) { Text(label) } else HudButton(tone = HudTone.Quiet, onClick = {
                         prefs.voiceEngine = e
                         engine = e
                         speed = prefs.voiceSpeed
@@ -154,7 +156,7 @@ class DrivingSettingsActivity : ComponentActivity() {
                 },
             )
             if (engine == VoiceEngine.Kokoro && !kokoroReady) {
-                Button(onClick = { KokoroModel.ensure(this@DrivingSettingsActivity); refresh++ }) { Text("Download natural voice") }
+                HudButton(onClick = { KokoroModel.ensure(this@DrivingSettingsActivity); refresh++ }) { Text("Download natural voice") }
             }
             Note(
                 when {
@@ -170,15 +172,17 @@ class DrivingSettingsActivity : ComponentActivity() {
                 value = speed, onValueChange = { speed = it },
                 onValueChangeFinished = { prefs.voiceSpeed = speed },
                 valueRange = JarvisTTS.MIN_SPEED..JarvisTTS.MAX_SPEED,
+                colors = SliderDefaults.colors(thumbColor = Hud.Cyan, activeTrackColor = Hud.Cyan, inactiveTrackColor = Hud.CyanHair),
             )
-            OutlinedButton(onClick = { testVoice(speed) }) { Text("Test voice") }
+            HudButton(tone = HudTone.Quiet, onClick = { testVoice(speed) }) { Text("Test voice") }
             ToggleRow("Download on Wi-Fi only", wifiOnly) { wifiOnly = it; prefs.wifiOnlyDownload = it }
-            if (!modelReady) Button(onClick = { JarvisModel.ensure(this@DrivingSettingsActivity); refresh++ }) { Text("Download fast voice") }
+            if (!modelReady) HudButton(onClick = { JarvisModel.ensure(this@DrivingSettingsActivity); refresh++ }) { Text("Download fast voice") }
 
             Section("Driving mode")
-            Button(onClick = { startActivity(Intent(this@DrivingSettingsActivity, DrivingActivity::class.java)) }, modifier = Modifier.fillMaxWidth()) {
+            HudButton(onClick = { startActivity(Intent(this@DrivingSettingsActivity, DrivingActivity::class.java)) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Start driving mode")
             }
+        }
         }
     }
 
@@ -198,16 +202,22 @@ class DrivingSettingsActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun Section(title: String) = Text(title.uppercase(), color = Color(0xFF8A8A8A), fontSize = 12.sp, letterSpacing = 1.5.sp, modifier = Modifier.padding(top = 12.dp))
+    private fun Section(title: String) = HudSection(title)
 
     @Composable
-    private fun Note(text: String) = Text(text, color = Color.White, fontSize = 15.sp)
+    private fun Note(text: String) = Text(text, color = Hud.Ink, fontSize = 15.sp, lineHeight = 22.sp)
 
     @Composable
     private fun ToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(label, color = Color.White, fontSize = 16.sp, modifier = Modifier.weight(1f).padding(end = 12.dp))
-            Switch(checked = checked, onCheckedChange = onChange)
+            Text(label, color = Hud.Ink, fontSize = 16.sp, modifier = Modifier.weight(1f).padding(end = 12.dp))
+            Switch(
+                checked = checked, onCheckedChange = onChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Hud.OnCyan, checkedTrackColor = Hud.Cyan, checkedBorderColor = Hud.Cyan,
+                    uncheckedThumbColor = Hud.Steel, uncheckedTrackColor = Hud.CyanFill, uncheckedBorderColor = Hud.CyanDim,
+                ),
+            )
         }
     }
 }

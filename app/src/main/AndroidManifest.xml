@@ -413,7 +413,7 @@
         <activity
             android:name=".driving.DrivingSettingsActivity"
             android:exported="true"
-            android:label="Jarvis Driving"
+            android:label="Jarvis Voice"
             android:icon="@mipmap/ic_launcher"
             android:theme="@android:style/Theme.Material.NoActionBar">
             <intent-filter>

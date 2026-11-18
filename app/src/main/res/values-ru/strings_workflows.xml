@@ -33,7 +33,7 @@
     <string name="workflow_delete_template">Удалить этот шаблон?</string>
     <string name="workflow_step_number">Шаг %1$d</string>
     <string name="workflow_step_name">Название шага</string>
-    <string name="workflow_instruction">Что должна сделать Mika?</string>
+    <string name="workflow_instruction">Что должна сделать Jarvis?</string>
     <string name="workflow_move_up">Выше</string>
     <string name="workflow_move_down">Ниже</string>
     <string name="workflow_add_step">Добавить шаг</string>

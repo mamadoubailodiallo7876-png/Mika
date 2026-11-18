@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="persona_title">ペルソナ</string>
-    <string name="persona_sub">Mika の話し方を選びます</string>
+    <string name="persona_sub">Jarvis の話し方を選びます</string>
     <string name="persona_default">デフォルト</string>
-    <string name="persona_default_sub">Mika のいつもの話し方</string>
+    <string name="persona_default_sub">Jarvis のいつもの話し方</string>
     <string name="persona_empty">ペルソナはまだありません</string>
-    <string name="persona_empty_sub">ペルソナは Mika の話し方を変えるだけで、できることは変えません。</string>
+    <string name="persona_empty_sub">ペルソナは Jarvis の話し方を変えるだけで、できることは変えません。</string>
     <string name="persona_new">新しいペルソナ</string>
     <string name="persona_edit">ペルソナを編集</string>
     <string name="persona_name">名前</string>
@@ -16,7 +16,7 @@
     <string name="persona_counter">%1$d 文字 · 約 %2$d トークン</string>
     <string name="persona_preview">プロンプト全体をプレビュー</string>
     <string name="persona_preview_hide">プレビューを閉じる</string>
-    <string name="persona_preview_note">灰色の部分は固定ルールです。ペルソナは口調と言い回しを変えられますが、安全、権限、Mika が報告する内容は変えられません。</string>
+    <string name="persona_preview_note">灰色の部分は固定ルールです。ペルソナは口調と言い回しを変えられますが、安全、権限、Jarvis が報告する内容は変えられません。</string>
     <string name="persona_chip">ペルソナ：%1$s</string>
     <string name="persona_manage">ペルソナを管理</string>
     <string name="persona_switch_note">切り替えはこのチャットの次のメッセージから反映されます。</string>

@@ -33,7 +33,7 @@
     <string name="workflow_delete_template">¿Eliminar esta plantilla?</string>
     <string name="workflow_step_number">Paso %1$d</string>
     <string name="workflow_step_name">Nombre del paso</string>
-    <string name="workflow_instruction">¿Qué debe hacer Mika?</string>
+    <string name="workflow_instruction">¿Qué debe hacer Jarvis?</string>
     <string name="workflow_move_up">Subir</string>
     <string name="workflow_move_down">Bajar</string>
     <string name="workflow_add_step">Añadir paso</string>

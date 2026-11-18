@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="persona_title">Persona</string>
-    <string name="persona_sub">Pilih cara Mika berbicara dengan Anda</string>
+    <string name="persona_sub">Pilih cara Jarvis berbicara dengan Anda</string>
     <string name="persona_default">Default</string>
-    <string name="persona_default_sub">Suara biasa Mika</string>
+    <string name="persona_default_sub">Suara biasa Jarvis</string>
     <string name="persona_empty">Belum ada persona</string>
-    <string name="persona_empty_sub">Persona mengubah cara Mika berbicara, bukan apa yang boleh dilakukan Mika.</string>
+    <string name="persona_empty_sub">Persona mengubah cara Jarvis berbicara, bukan apa yang boleh dilakukan Jarvis.</string>
     <string name="persona_new">Persona baru</string>
     <string name="persona_edit">Edit persona</string>
     <string name="persona_name">Nama</string>
@@ -16,7 +16,7 @@
     <string name="persona_counter">%1$d karakter · sekitar %2$d token</string>
     <string name="persona_preview">Pratinjau prompt lengkap</string>
     <string name="persona_preview_hide">Sembunyikan pratinjau</string>
-    <string name="persona_preview_note">Aturan abu-abu bersifat tetap. Persona dapat mengubah nada dan susunan kata, tetapi tidak keselamatan, izin, atau apa yang dilaporkan Mika.</string>
+    <string name="persona_preview_note">Aturan abu-abu bersifat tetap. Persona dapat mengubah nada dan susunan kata, tetapi tidak keselamatan, izin, atau apa yang dilaporkan Jarvis.</string>
     <string name="persona_chip">Persona: %1$s</string>
     <string name="persona_manage">Kelola persona</string>
     <string name="persona_switch_note">Pergantian hanya berlaku untuk pesan berikutnya di obrolan ini.</string>

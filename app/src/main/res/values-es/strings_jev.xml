@@ -3,7 +3,7 @@
     <string name="jev_title">Modelo de decisión · Jev</string>
     <string name="jev_row_sub">Clasificación de intención y selección de rutas opcionales</string>
     <string name="jev_enabled">Usar el modelo de decisión</string>
-    <string name="jev_privacy">Al activarlo, se envían tu solicitud, el contexto reciente de la conversación y las rutas candidatas al proveedor configurado para determinar la intención y elegir rutas. Si falla, Mika usa el modelo habitual. Los modelos principal, de visión y ligero se configuran por separado.</string>
+    <string name="jev_privacy">Al activarlo, se envían tu solicitud, el contexto reciente de la conversación y las rutas candidatas al proveedor configurado para determinar la intención y elegir rutas. Si falla, Jarvis usa el modelo habitual. Los modelos principal, de visión y ligero se configuran por separado.</string>
     <string name="jev_provider">Proveedor</string>
     <string name="jev_endpoint">Endpoint</string>
     <string name="jev_model">ID del modelo</string>

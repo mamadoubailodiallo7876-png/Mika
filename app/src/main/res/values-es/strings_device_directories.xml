@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="device_dirs_title">Carpetas del dispositivo</string>
-    <string name="device_dirs_explanation">Las pistas ayudan a Mika a encontrar archivos. Añadir una pista no concede acceso; autoriza cada carpeta guardada por separado.</string>
+    <string name="device_dirs_explanation">Las pistas ayudan a Jarvis a encontrar archivos. Añadir una pista no concede acceso; autoriza cada carpeta guardada por separado.</string>
     <string name="device_dirs_authorize">Permitir leer esta carpeta</string>
     <string name="device_dirs_recursive">Incluir subcarpetas</string>
     <string name="device_dirs_not_synced">Autorización sin sincronizar</string>
@@ -24,8 +24,8 @@
     <string name="device_dirs_denied">Acceso denegado</string>
     <string name="device_dirs_unknown">Estado no disponible</string>
     <string name="device_dirs_entry">Pistas de carpetas</string>
-    <string name="device_dirs_entry_sub">Ayuda a Mika a encontrar archivos descargados</string>
+    <string name="device_dirs_entry_sub">Ayuda a Jarvis a encontrar archivos descargados</string>
     <string name="device_dirs_source_preset">Predefinida</string>
     <string name="device_dirs_source_user">Editada por ti</string>
-    <string name="device_dirs_source_mika">Editada por Mika</string>
+    <string name="device_dirs_source_mika">Editada por Jarvis</string>
 </resources>

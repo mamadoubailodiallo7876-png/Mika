@@ -176,3 +176,18 @@ Limitations you should know about:
 - `licenses/THIRD_PARTY_NOTICES.md` and the in-app licenses screen were **not** updated: `LicensesTest` requires every
   notices heading to also appear in `ui/Licenses.kt`, which is outside the `driving` package. Add entries for
   sherpa-onnx, ONNX Runtime and the Android Car App Library in both places.
+
+## Name and look (Jarvis / Stark HUD)
+
+The app is branded **Jarvis**: launcher label, every visible string in all 13 languages, the model's persona prompt, the
+call greeting, notifications and the icon (an arc-reactor glyph, with a themed-icon layer). The application id stays
+`com.wangzan101.mika` so installs update in place.
+
+Deliberately **not** renamed: GitHub links and the `Mika` repo name, the `Download/Mika` and `Music/Mika` folders (existing
+user files live there), the licences screen (credit to the upstream project), the external "Mika CLI" tool name,
+the MCP/HTTP client identity, and code identifiers. Anywhere you still see "Mika" is one of these.
+
+Look: near-black navy background, cyan "arc reactor" glow lines, ice-white text, gold for "needs you", red for errors,
+monospaced letter-spaced labels. The dark palette is the default for everyone (Light is still available under
+Appearance); the default accent is **Arc reactor**, with new **Gold** and **Crimson** accents. All values are provisional
+(there was no design system), see `JarvisHud.kt` and `ui/theme/Colors.kt`.

@@ -26,9 +26,9 @@
     <string name="export_no_messages">Nenhuma mensagem para exportar</string>
     <string name="export_current_turn">O turno em andamento não é incluído.</string>
     <string name="export_warnings">%1$d itens não puderam ser incluídos.</string>
-    <string name="export_filename_fallback">Conversa do Mika</string>
+    <string name="export_filename_fallback">Conversa do Jarvis</string>
     <string name="export_label_user">Usuário</string>
-    <string name="export_label_mika">Mika</string>
+    <string name="export_label_mika">Jarvis</string>
     <string name="export_label_steer">Mensagem durante a tarefa</string>
     <string name="export_label_answer">Resposta</string>
     <string name="export_label_tool_steps">Etapas de ferramentas</string>

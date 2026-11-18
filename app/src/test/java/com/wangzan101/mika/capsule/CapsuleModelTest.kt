@@ -55,7 +55,7 @@ class CapsuleModelTest {
     @Test fun noTasksHiddenDuringTasksIdleIconWhenAlways() {
         assertEquals(CapsuleView.Hidden, model.update(inputs(), 0))
         assertEquals(CapsuleKind.Idle, shown(model.update(inputs(mode = CapsuleMode.Always), 0)).kind)
-        // 一直显示也照样在 Mika 界面里、锁屏时不显示
+        // 一直显示也照样在 Jarvis 界面里、锁屏时不显示
         assertEquals(CapsuleView.Hidden, model.update(inputs(mode = CapsuleMode.Always, foreground = true), 0))
         assertEquals(CapsuleView.Hidden, model.update(inputs(mode = CapsuleMode.Always, interactive = false), 0))
     }
@@ -71,7 +71,7 @@ class CapsuleModelTest {
             assertEquals("c-k", v.conversationId)
             assertTrue(v.pill)
         }
-        // 开关是「从不显示」、在 Mika 里、锁屏时照样不显示(靠通知)
+        // 开关是「从不显示」、在 Jarvis 里、锁屏时照样不显示(靠通知)
         assertEquals(CapsuleView.Hidden, model.update(inputs(mode = CapsuleMode.Off, kept = kept), 0))
         assertEquals(CapsuleView.Hidden, model.update(inputs(foreground = true, kept = kept), 0))
         assertEquals(CapsuleView.Hidden, model.update(inputs(interactive = false, kept = kept), 0))
@@ -110,7 +110,7 @@ class CapsuleModelTest {
         assertEquals(CapsuleKind.NeedTakeover to "需要你：付款", line(takeover, Takeover.Stage.Waiting).let { it.kind to it.text })
         assertEquals("需要你：请登录", line(TaskState.WaitingTakeover("login", "请登录"), Takeover.Stage.Waiting).text)
         assertEquals(CapsuleKind.NeedConfirm to "要你同意：发送", line(confirm).let { it.kind to it.text })
-        assertEquals(CapsuleKind.NeedAnswer to "Mika 问你：要哪个颜色？", line(TaskState.WaitingInput("要哪个颜色？")).let { it.kind to it.text })
+        assertEquals(CapsuleKind.NeedAnswer to "Jarvis 问你：要哪个颜色？", line(TaskState.WaitingInput("要哪个颜色？")).let { it.kind to it.text })
         assertEquals(CapsuleKind.Held to "先等等：你打开了这个 App", line(TaskState.Held(GateReason("paused", "你打开了这个 App"))).let { it.kind to it.text })
         // 要你在手机上动一下手(在系统的选择框里选一个):算要你处理
         val pick = line(TaskState.Held(GateReason("waiting_user", "「聊天」在问用哪个，请在屏幕上选一下", needsYou = true)))
@@ -182,7 +182,7 @@ class CapsuleModelTest {
     @Test fun stateChangeSwitchesAtOnce() {
         model.update(inputs(run("a", running("一"))), 0)
         val v = shown(model.update(inputs(run("a", TaskState.WaitingInput("要哪个？"))), 100))
-        assertEquals("Mika 问你：要哪个？", v.text)
+        assertEquals("Jarvis 问你：要哪个？", v.text)
     }
 
     // ---------- 只变宽不变窄 ----------
@@ -276,14 +276,14 @@ class CapsuleModelTest {
         val a = run("a", TaskState.Cancelled)
         assertTrue(shown(model.update(inputs(a), 0)).pill)
         assertEquals(CapsuleView.Hidden, model.update(inputs(a), CapsuleModel.LINGER_MS))
-        // 进 Mika 再出来:不再展开「已停止」
+        // 进 Jarvis 再出来:不再展开「已停止」
         assertEquals(CapsuleView.Hidden, model.update(inputs(a, foreground = true), CapsuleModel.LINGER_MS + 1_000))
         assertEquals(CapsuleView.Hidden, model.update(inputs(a), CapsuleModel.LINGER_MS + 2_000))
         assertNull(model.nextChangeAt)
     }
 
     @Test fun endedWhileHiddenCountsItsTimeToo() {
-        // 在 Mika 里结束、过了 10 秒才回到别的 App:不再出现
+        // 在 Jarvis 里结束、过了 10 秒才回到别的 App:不再出现
         val a = run("a", TaskState.Succeeded("好了"))
         assertEquals(CapsuleView.Hidden, model.update(inputs(a, foreground = true), 0))
         assertEquals(CapsuleView.Hidden, model.update(inputs(a), 60_000))
@@ -387,7 +387,7 @@ class CapsuleModelTest {
         model.update(inputs(run("new", TaskState.Failed("x", FailKind.Model)), run("r", running("在搜")), run("q", TaskState.WaitingInput("要哪个？"))), 10)
         val rows = model.cardRuns()
         assertEquals(listOf("q", "r", "new", "old"), rows.map { it.run.key })
-        assertEquals(CapsuleKind.NeedAnswer to "Mika 问你：要哪个？", rows[0].kind to rows[0].line)
+        assertEquals(CapsuleKind.NeedAnswer to "Jarvis 问你：要哪个？", rows[0].kind to rows[0].line)
         assertEquals(0L, rows[1].startedAt)
         assertNull(rows[0].startedAt)
         assertEquals(CapsuleKind.Failed, rows[2].kind)
@@ -459,10 +459,10 @@ class CapsuleModelTest {
     // ---------- 读屏 ----------
 
     @Test fun ballDescribesItsStatus() {
-        assertEquals("Mika 在干活：在搜牙膏 · 共 2 件，点开看详情", CapsuleCopy.describe(CapsuleView.Shown(CapsuleKind.Running, "在搜牙膏 · 共 2 件", count = 2)))
+        assertEquals("Jarvis 在干活：在搜牙膏 · 共 2 件，点开看详情", CapsuleCopy.describe(CapsuleView.Shown(CapsuleKind.Running, "在搜牙膏 · 共 2 件", count = 2)))
         assertEquals("要你同意：发送，点开处理", CapsuleCopy.describe(CapsuleView.Shown(CapsuleKind.NeedConfirm, "要你同意：发送")))
-        assertEquals("Mika 先等等：排队中，点开看详情", CapsuleCopy.describe(CapsuleView.Shown(CapsuleKind.Held, "先等等：排队中")))
-        assertEquals("Mika 办好了 · 点开看结果", CapsuleCopy.describe(CapsuleView.Shown(CapsuleKind.Done, "办好了 · 点开看结果")))
+        assertEquals("Jarvis 先等等：排队中，点开看详情", CapsuleCopy.describe(CapsuleView.Shown(CapsuleKind.Held, "先等等：排队中")))
+        assertEquals("Jarvis 办好了 · 点开看结果", CapsuleCopy.describe(CapsuleView.Shown(CapsuleKind.Done, "办好了 · 点开看结果")))
         assertEquals(CapsuleCopy.IDLE, CapsuleCopy.describe(CapsuleView.Shown(CapsuleKind.Idle, "")))
     }
 
@@ -485,7 +485,7 @@ class CapsuleModelTest {
         assertNull(model.nextChangeAt)
         assertTrue(!CapsuleKind.Notice.active && !CapsuleKind.Notice.needsYou)
         // 读屏只说条数
-        assertEquals("Mika，3 条值得提醒", CapsuleCopy.describe(v))
+        assertEquals("Jarvis，3 条值得提醒", CapsuleCopy.describe(v))
         // 没有了回到空闲图标
         assertEquals(CapsuleKind.Idle, shown(model.update(notices(0), 1)).kind)
     }

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="persona_title">Persona</string>
-    <string name="persona_sub">Elige cómo te habla Mika</string>
+    <string name="persona_sub">Elige cómo te habla Jarvis</string>
     <string name="persona_default">Predeterminada</string>
-    <string name="persona_default_sub">La voz habitual de Mika</string>
+    <string name="persona_default_sub">La voz habitual de Jarvis</string>
     <string name="persona_empty">Aún no hay personas</string>
-    <string name="persona_empty_sub">Una persona cambia cómo habla Mika, no lo que puede hacer.</string>
+    <string name="persona_empty_sub">Una persona cambia cómo habla Jarvis, no lo que puede hacer.</string>
     <string name="persona_new">Nueva persona</string>
     <string name="persona_edit">Editar persona</string>
     <string name="persona_name">Nombre</string>
@@ -16,7 +16,7 @@
     <string name="persona_counter">%1$d caracteres · unos %2$d tokens</string>
     <string name="persona_preview">Previsualizar la indicación completa</string>
     <string name="persona_preview_hide">Ocultar la vista previa</string>
-    <string name="persona_preview_note">Las reglas grises son fijas. Una persona puede cambiar el tono y la redacción, nunca la seguridad, los permisos ni lo que Mika informa.</string>
+    <string name="persona_preview_note">Las reglas grises son fijas. Una persona puede cambiar el tono y la redacción, nunca la seguridad, los permisos ni lo que Jarvis informa.</string>
     <string name="persona_chip">Persona: %1$s</string>
     <string name="persona_manage">Gestionar personas</string>
     <string name="persona_switch_note">El cambio solo afecta a los próximos mensajes de este chat.</string>

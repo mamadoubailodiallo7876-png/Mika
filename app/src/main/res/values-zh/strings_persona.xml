@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="persona_title">人格</string>
-    <string name="persona_sub">选择 Mika 和你说话的方式</string>
+    <string name="persona_sub">选择 Jarvis 和你说话的方式</string>
     <string name="persona_default">默认</string>
-    <string name="persona_default_sub">Mika 平常的说话方式</string>
+    <string name="persona_default_sub">Jarvis 平常的说话方式</string>
     <string name="persona_empty">还没有人格</string>
-    <string name="persona_empty_sub">人格只改变 Mika 怎么说话，不改变 Mika 能做什么。</string>
+    <string name="persona_empty_sub">人格只改变 Jarvis 怎么说话，不改变 Jarvis 能做什么。</string>
     <string name="persona_new">新建人格</string>
     <string name="persona_edit">编辑人格</string>
     <string name="persona_name">名称</string>
@@ -16,7 +16,7 @@
     <string name="persona_counter">%1$d 字 · 约 %2$d token</string>
     <string name="persona_preview">预览完整提示词</string>
     <string name="persona_preview_hide">收起预览</string>
-    <string name="persona_preview_note">灰色部分是固定规则。人格可以改变语气和措辞，但不能改变安全、权限或 Mika 报告的内容。</string>
+    <string name="persona_preview_note">灰色部分是固定规则。人格可以改变语气和措辞，但不能改变安全、权限或 Jarvis 报告的内容。</string>
     <string name="persona_chip">人格：%1$s</string>
     <string name="persona_manage">管理人格</string>
     <string name="persona_switch_note">切换只影响这个对话接下来的消息。</string>
