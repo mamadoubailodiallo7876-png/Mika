@@ -10,6 +10,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // sherpa-onnx (offline TTS) is only published as an AAR on JitPack; keep JitPack scoped to com.github.* groups
+        maven("https://jitpack.io") { content { includeGroupByRegex("com\\.github\\..*") } }
     }
 }
 rootProject.name = "Mika"

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,11 @@ plugins {
     // 插件 manifest/注册表用 kotlinx.serialization(依赖已经在 libs 里,core 也在用)
     alias(libs.plugins.kotlin.serialization)
 }
+
+// Jarvis 驾驶模式的 Porcupine 唤醒词 AccessKey:从 local.properties 读(见 local.properties.example),缺省为空
+val porcupineAccessKey: String = rootProject.file("local.properties").takeIf { it.exists() }
+    ?.let { f -> Properties().apply { f.inputStream().use { load(it) } }.getProperty("PORCUPINE_ACCESS_KEY") }
+    ?.trim().orEmpty()
 
 // 关于页上的构建编号:当前提交的短哈希;没有 git(如从源码包编译)时写 dev
 val gitHash: String = runCatching {
@@ -26,6 +33,7 @@ android {
         // 关于页版本号后的 Beta 标记;出正式版时改成 false
         buildConfigField("boolean", "BETA", "true")
         buildConfigField("boolean", "ADB_LOGS", "false")
+        buildConfigField("String", "PORCUPINE_ACCESS_KEY", "\"${porcupineAccessKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
     }
 
     // 沙箱程序只有 arm64 版本(jniLibs/arm64-v8a);APK 不限 ABI,别的设备照常安装、显示「此设备不支持沙箱」。
@@ -118,6 +126,12 @@ dependencies {
     implementation(libs.mlkit.text.recognition.chinese)
     // 微信绑定二维码只在本机编码，不调用在线图片服务。
     implementation(libs.zxing.core)
+    // Jarvis 驾驶模式:唤醒词、离线朗读(模型包是 tar.bz2,解压用 commons-compress)、Android Auto
+    implementation(libs.porcupine.android)
+    implementation(libs.sherpa.onnx)
+    implementation(libs.commons.compress)
+    implementation(libs.androidx.car.app)
+    implementation(libs.androidx.lifecycle.service)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
