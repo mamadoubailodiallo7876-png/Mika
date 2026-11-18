@@ -38,3 +38,11 @@ internal object CoreSections : PromptSections {
         SystemPrompt.read("batch").takeIf { DO_STEPS_TOOL in env.offered },
     ).map(env::gate)
 }
+
+/** 搜索和抓取独立于浏览器工具组；即使浏览器尚未展开，也要说明读正文的入口。 */
+internal object WebResearchSections : PromptSections {
+    override fun sections(env: PromptEnv): List<String> {
+        if ("web_search" !in env.offered && "web_fetch" !in env.offered) return emptyList()
+        return listOf(env.gate(SystemPrompt.read("web-research")))
+    }
+}

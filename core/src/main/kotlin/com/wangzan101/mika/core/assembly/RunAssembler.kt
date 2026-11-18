@@ -1,6 +1,7 @@
 package com.wangzan101.mika.core.assembly
 
 import com.wangzan101.mika.core.capability.Capability
+import com.wangzan101.mika.core.agent.WebResearchSections
 import com.wangzan101.mika.core.agent.CoreSections
 import com.wangzan101.mika.core.general.GeneralGroup
 import com.wangzan101.mika.core.run.RunSpec
@@ -37,7 +38,7 @@ internal class RunAssembler(private val providers: List<CapabilityProvider>) {
         val capabilityTools = capabilities.flatMap { it.tools() }.filter { !readOnly || it.risk == Risk.Read ||
             it.capability == "web" && it.verb == Verb.Navigate }
         return ToolDispatcher(capabilities, general + capabilityTools,
-            listOf(CoreSections) + capabilities, config, { ctx -> Interfaces.attach(ctx, capabilities.mapNotNull { it.surface }, stableRefs) },
+            listOf(CoreSections) + capabilities + WebResearchSections, config, { ctx -> Interfaces.attach(ctx, capabilities.mapNotNull { it.surface }, stableRefs) },
             formerPrefix, renamed, retired, moved)
     }
 }

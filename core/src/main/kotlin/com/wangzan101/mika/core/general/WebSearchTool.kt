@@ -5,7 +5,6 @@ import com.wangzan101.mika.core.observation.Observation
 import com.wangzan101.mika.core.observation.Place
 import com.wangzan101.mika.core.observation.Trust
 import com.wangzan101.mika.core.observation.Untrusted
-import com.wangzan101.mika.core.prompt.Feedback
 import com.wangzan101.mika.core.prompt.Prompts
 import com.wangzan101.mika.core.search.WebSearch
 import com.wangzan101.mika.core.search.WebSearchResult
@@ -31,7 +30,7 @@ internal object WebSearchTool : AgentTool {
     override val offScreen = true
     override val concurrency = Concurrency.ParallelSafe
     override val def = ToolDef(
-        "web_search", Prompts.tool("web_search", "maxCount" to WebSearch.MAX_COUNT),
+        "web_search", Prompts.tool("web_search", "max_count" to WebSearch.MAX_COUNT),
         mapOf(
             "query" to str("Words to search for, 1-500 characters."),
             "count" to int("Optional result count, 1-${WebSearch.MAX_COUNT} (default 5).", 1, WebSearch.MAX_COUNT),
@@ -56,11 +55,7 @@ internal object WebSearchTool : AgentTool {
                                 put("snippet", Untrusted.wrap(hit.snippet))
                             }
                         }))
-                        when {
-                            result.hits.isEmpty() -> put("hint", "No results. Try a different query or use the browser tools to search.")
-                            // 配了抓取服务时,搜索完就把「怎么读这几页」说清楚,免得不看工具说明也去开浏览器
-                            ctx.config.webFetch != null -> put("hint", Feedback["web_search.read_with_fetch"])
-                        }
+                        if (result.hits.isEmpty()) put("hint", "No results. Try a different query or use the browser tools to search.")
                     },
                     observations = result.hits.map { hit ->
                         Observation(

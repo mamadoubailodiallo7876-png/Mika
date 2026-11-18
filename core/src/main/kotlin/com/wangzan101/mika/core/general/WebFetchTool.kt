@@ -34,7 +34,7 @@ internal object WebFetchTool : AgentTool {
     override val offScreen = true
     override val concurrency = Concurrency.ParallelSafe
     override val def = ToolDef(
-        "web_fetch", Prompts.tool("web_fetch", "maxChars" to MAX_CHARS),
+        "web_fetch", Prompts.tool("web_fetch", "max_chars" to MAX_CHARS),
         mapOf(
             "url" to str("The page address, starting with http:// or https://."),
             "maxChars" to int("Characters to return, 1-$MAX_CHARS (default $DEFAULT_CHARS).", 1, MAX_CHARS),

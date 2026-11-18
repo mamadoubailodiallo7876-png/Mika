@@ -19,6 +19,9 @@ import com.wangzan101.mika.core.vision.JvmTestImageOps
 import com.wangzan101.mika.core.vision.VisionService
 import com.wangzan101.mika.core.vision.says
 import com.wangzan101.mika.core.cap.web.FakeWebPort
+import com.wangzan101.mika.core.fetch.WebFetch
+import com.wangzan101.mika.core.search.WebSearch
+import org.junit.Assert.assertEquals
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import com.wangzan101.mika.core.assembly.toolDispatcher
@@ -39,9 +42,20 @@ class PromptSurfaceTest {
 
     private val bundled = KnowledgeStore(KnowledgeStore.loadBundled())
     private val LAYERS = linkedMapOf("chat" to emptyList(), "phone" to listOf("phone"), "web" to listOf("web"), "all" to listOf("phone", "web", "sandbox"))
+    private val search = object : WebSearch {
+        override suspend fun search(query: String, count: Int) = error("Prompt capture must not call search")
+    }
+    private val fetch = object : WebFetch {
+        override suspend fun fetch(url: String) = error("Prompt capture must not fetch pages")
+    }
+    private fun researchCombo(search: WebSearch?, fetch: WebFetch?) = Combo({
+        toolDispatcher(FakeScreen(), web = FakeWebPort(), webSearch = search, webFetch = fetch)
+    })
+
     private val combos: Map<String, Combo> = linkedMapOf(
         "phone" to Combo({ toolDispatcher(FakeScreen()) }),
         "phone-inline-batch" to Combo({ toolDispatcher(FakeScreen(), inlineScreen = true) }, SpeedFlags(inlineScreen = true, batchSteps = true)),
+        "phone-web-research" to researchCombo(search, fetch),
         "phone-web" to Combo({ toolDispatcher(FakeScreen(), web = FakeWebPort()) }),
         "phone-sandbox-offline" to Combo({ toolDispatcher(FakeScreen(), sandbox = FakeSandbox(), workspace = { "w" }) }),
         "phone-web-sandbox-online" to Combo({
@@ -83,6 +97,19 @@ class PromptSurfaceTest {
         for ((name, c) in combos) {
             val m = offered(c)
             PromptSurface.check("system/$name", PromptSurface.system(m.system!!, m.tools))
+        }
+    }
+
+    @Test fun firstRequestRoutesOnlyWithVisibleResearchTools() {
+        for (s in listOf(null, search)) for (f in listOf(null, fetch)) {
+            val first = offered(researchCombo(s, f), open = false)
+            val system = first.system!!
+            val routing = system.substringAfter("## Finding and reading web sources", "")
+            assertEquals(s != null, first.tools.any { it.name == "web_search" })
+            assertEquals(f != null, first.tools.any { it.name == "web_fetch" })
+            assertEquals(s != null, "web_search" in routing)
+            assertEquals(f != null, "web_fetch" in routing)
+            assertEquals(s != null || f != null, system.contains("## Finding and reading web sources"))
         }
     }
 
