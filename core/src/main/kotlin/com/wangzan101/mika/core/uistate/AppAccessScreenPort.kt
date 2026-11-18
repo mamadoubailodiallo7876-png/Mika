@@ -147,6 +147,13 @@ class AppAccessScreenPort(
         return inner.shareAudio(packageName, path, text)
     }
 
+    override val canShareVideo: Boolean get() = inner.canShareVideo
+
+    override suspend fun shareVideo(packageName: String, path: String, text: String?): ActionResult {
+        target(packageName)
+        return inner.shareVideo(packageName, path, text)
+    }
+
     /** 指定了 App 的在这里看;没指定的由端口按名单挑接手的 App(由谁打开只有端口知道)。 */
     override suspend fun openLink(action: String?, uri: String?, packageName: String?): ActionResult {
         packageName?.let(::target)

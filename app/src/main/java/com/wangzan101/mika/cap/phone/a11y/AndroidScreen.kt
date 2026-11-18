@@ -126,6 +126,8 @@ class AndroidScreen(
     override val appAccess: com.wangzan101.mika.core.access.AppAccessPolicy = com.wangzan101.mika.core.access.AppAccessPolicy.ALLOW,
     /** 把工作区里的音频变成可分享的 content URI;为空时这个屏不支持音频分享。 */
     internal val shareAudioFile: (suspend (path: String) -> ShareableFile?)? = null,
+    /** 把工作区里的视频变成可分享的 content URI;为空时这个屏不支持视频分享。 */
+    internal val shareVideoFile: (suspend (path: String) -> ShareableFile?)? = null,
     /** 并行任务时:按占用登记,本任务此刻能不能占这个包([user] 那份;null 为本来那份)。只查不占。 */
     internal val appFree: (packageName: String, user: Int?) -> Boolean = { _, _ -> true },
     /**
@@ -255,8 +257,9 @@ class AndroidScreen(
     override suspend fun shareText(packageName: String, text: String): ActionResult = opening.shareText(packageName, text)
     override suspend fun shareAudio(packageName: String, path: String, text: String?): ActionResult = opening.shareAudio(packageName, path, text)
     override val canShareAudio: Boolean get() = opening.canShareAudio
+    override suspend fun shareVideo(packageName: String, path: String, text: String?): ActionResult = opening.shareVideo(packageName, path, text)
+    override val canShareVideo: Boolean get() = opening.canShareVideo
     suspend fun openOwnPage(intent: Intent): ActionResult = opening.openOwnPage(intent)
-
 
     /**
      * 打开链接或设置页。和 [openApp] 一样第一次用时才建屏;用户在主屏用着那个 App 时不打开。
