@@ -243,4 +243,7 @@
     <string name="tool_audio_save">Save audio</string>
     <string name="tool_share_audio">Share audio to app</string>
     <string name="tool_audio_transcribe">Transcribe audio</string>
+    <string name="tool_video_frames">Look at video</string>
+    <string name="tool_video_info">Video info</string>
+    <string name="tool_video_save">Save video</string>
 </resources>

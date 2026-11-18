@@ -232,4 +232,7 @@
     <string name="tool_audio_save">保存音频</string>
     <string name="tool_share_audio">分享音频到 App</string>
     <string name="tool_audio_transcribe">转写音频</string>
+    <string name="tool_video_frames">看视频</string>
+    <string name="tool_video_info">查看视频信息</string>
+    <string name="tool_video_save">保存视频</string>
 </resources>

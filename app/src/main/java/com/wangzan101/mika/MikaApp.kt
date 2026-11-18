@@ -550,6 +550,8 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
         // 上次存音乐库写到一半被杀留下的空壳条目
         scope.launch { runCatching { com.wangzan101.mika.cap.audio.AudioExporter(this@MikaApp).cleanPending() } }
         scope.launch { runCatching { com.wangzan101.mika.media.AudioShareExporter(this@MikaApp).cleanPending() } }
+        // 上次存影片库写到一半被杀留下的空壳条目
+        scope.launch { runCatching { com.wangzan101.mika.media.VideoExporter(this@MikaApp).cleanPending() } }
         // 上次进程留下的网页上传副本
         scope.launch { runCatching { WebFiles.clearStale(this@MikaApp, SandboxDirs(this@MikaApp).gate) } }
         // 更新已经装上后,关于页下好的安装包
