@@ -1,0 +1,3 @@
+# Copy to local.properties (git-ignored) and fill in.
+# sdk.dir=/path/to/Android/sdk
+PORCUPINE_ACCESS_KEY=...   # free at https://picovoice.ai (Console -> AccessKey)
