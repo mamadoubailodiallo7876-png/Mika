@@ -79,7 +79,7 @@ internal class CallPcmBridge(
         }
         try {
             if (!session.setMuted(false) || (greeting.isNotBlank() && !session.sendGreeting(greeting))) {
-                throw CallMediaFailure("火山未接受本次通话的开场白")
+                throw CallMediaFailure("语音服务未接受本次通话的开场白")
             }
             val input = launch(Dispatchers.IO) {
                 val inputPacer = CallInputPacer(session.inputChunkBytes, session.inputSampleRate)
@@ -91,7 +91,7 @@ internal class CallPcmBridge(
                     if (count == 0) continue
                     position += count
                     if (position == frame.size) {
-                        if (!inputPacer.send { session.sendPcm16(frame) }) throw CallMediaFailure("火山音频输入已中断")
+                        if (!inputPacer.send { session.sendPcm16(frame) }) throw CallMediaFailure("语音服务音频输入已中断")
                         counters?.inputAccepted(frame, System.nanoTime())
                         position = 0
                     }
@@ -186,11 +186,11 @@ internal class CallPcmBridge(
                                 }
                             }
                             is VolcRealtimeEvent.Failed -> throw event.error
-                            VolcRealtimeEvent.Closed -> throw CallMediaFailure("火山语音会话已结束，电话由系统处理")
+                            VolcRealtimeEvent.Closed -> throw CallMediaFailure("实时语音会话已结束，电话由系统处理")
                             else -> Unit
                         }
                     }
-                    throw CallMediaFailure("火山语音连接已断开，电话由系统处理")
+                    throw CallMediaFailure("实时语音连接已断开，电话由系统处理")
                 } finally {
                     input.cancel()
                     flushAssistantText()

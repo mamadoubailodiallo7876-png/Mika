@@ -27,10 +27,10 @@ interface CallRealtimeProvider {
     ): CallRealtimeSession
 }
 
-class VolcRealtimeProvider : CallRealtimeProvider {
+class ProfileRealtimeProvider : CallRealtimeProvider {
     private fun config(profile: CallVoiceProfile, systemPrompt: String, enablePhoneDtmf: Boolean): VolcRealtimeConfig {
-        require(profile.protocol == CallVoiceProtocol.VOLC_DUPLEX) { "不支持的实时语音协议" }
-        return VolcRealtimeConfig(systemPrompt = systemPrompt, speaker = profile.speaker, model = profile.model, enablePhoneDtmf = enablePhoneDtmf)
+        if (profile.protocol == CallVoiceProtocol.OPENAI_REALTIME) require(profile.endpoint == OpenAiCallProtocol.ENDPOINT)
+        return VolcRealtimeConfig(systemPrompt = systemPrompt, speaker = profile.speaker, model = profile.model, enablePhoneDtmf = enablePhoneDtmf, protocol = profile.protocol)
     }
 
     override fun validate(profile: CallVoiceProfile, systemPrompt: String, enablePhoneDtmf: Boolean) {
