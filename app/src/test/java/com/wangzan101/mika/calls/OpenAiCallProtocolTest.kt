@@ -4,8 +4,7 @@ import java.util.Base64
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.collect
 import kotlinx.serialization.json.*
 import okhttp3.*
 import okhttp3.mockwebserver.MockResponse
@@ -25,6 +24,13 @@ class OpenAiCallProtocolTest {
         assertArrayEquals(whole, pieces.toByteArray())
         assertArrayEquals(byteArrayOf(10, 0, 30, 0, 50, 0),
             CallPcm16To24().convert(byteArrayOf(30, 0, 60, 0), 4))
+    }
+
+    @Test fun openAiStringErrorCodesUseTheExistingCredentialAndQuotaMessages() {
+        fun kind(code: String) = OpenAiCallProtocol.errorKind(buildJsonObject { put("code", code) })
+        assertEquals(VolcRealtimeException.Kind.AUTH, kind("invalid_api_key"))
+        assertEquals(VolcRealtimeException.Kind.RATE_LIMITED, kind("insufficient_quota"))
+        assertEquals(VolcRealtimeException.Kind.PROVIDER, kind("unknown"))
     }
 
     @Test fun phoneSessionUsesOpenAiHandshakeAudioTranscriptsAndTools() = runBlocking {
@@ -80,9 +86,11 @@ class OpenAiCallProtocolTest {
                 peer.send("""{"type":"input_audio_buffer.speech_started","item_id":"u"}""")
                 peer.send("""{"type":"conversation.item.input_audio_transcription.completed","item_id":"u","transcript":"hello"}""")
                 peer.send("""{"type":"response.output_audio_transcript.delta","response_id":"r","delta":"OK"}""")
-                peer.send("""{"type":"response.output_audio.delta","response_id":"r","delta":"YWI="}""")
+                peer.send("""{"type":"response.output_audio.delta","response_id":"r","item_id":"answer","content_index":0,"delta":"YWI="}""")
                 peer.send("""{"type":"response.done","response":{"id":"r","status":"completed","output":[{"type":"function_call","name":"send_dtmf","call_id":"c","arguments":"{\"digits\":\"1\"}"}]}}""")
-                val events = session.events.take(7).toList()
+                val observed = Channel<VolcRealtimeEvent>(16)
+                val collector = launch { session.events.collect { observed.send(it) } }
+                val events = List(7) { observed.receive() }
                 assertEquals(VolcRealtimeEvent.UserSpeaking, events[0])
                 assertEquals("hello", (events[1] as VolcRealtimeEvent.UserTranscript).text)
                 assertEquals(VolcRealtimeEvent.AssistantTranscript("OK"), events[3])
@@ -91,8 +99,18 @@ class OpenAiCallProtocolTest {
                 assertTrue(session.sendToolResult("c", buildJsonObject { put("ok", true) }))
                 assertEquals("function_call_output", messages.receive()["item"]!!.jsonObject["type"]!!.jsonPrimitive.content)
                 assertEquals("response.create", messages.receive()["type"]!!.jsonPrimitive.content)
+                // A result can finish after the caller has interrupted its originating turn.
+                peer.send("""{"type":"response.done","response":{"id":"second","status":"completed","output":[{"type":"function_call","name":"send_dtmf","call_id":"c2","arguments":"{\"digits\":\"2\"}"}]}}""")
+                assertEquals("c2", (observed.receive() as VolcRealtimeEvent.FunctionCall).callId)
+                peer.send("""{"type":"input_audio_buffer.speech_started","item_id":"next-caller-turn"}""")
+                assertEquals(VolcRealtimeEvent.UserSpeaking, observed.receive())
+                assertTrue(session.sendToolResult("c2", buildJsonObject { put("ok", true) }))
+                assertEquals("c2", messages.receive()["item"]!!.jsonObject["call_id"]!!.jsonPrimitive.content)
+                assertTrue(session.sendPcm16(ByteArray(640)))
+                assertEquals("input_audio_buffer.append", messages.receive()["type"]!!.jsonPrimitive.content)
                 session.close()
                 session.awaitClosed()
+                collector.join()
             }
         } finally {
             server.shutdown()

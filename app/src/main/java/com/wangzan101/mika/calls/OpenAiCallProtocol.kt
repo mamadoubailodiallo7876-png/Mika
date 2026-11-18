@@ -1,5 +1,6 @@
 package com.wangzan101.mika.calls
 
+import com.wangzan101.mika.calls.VolcRealtimeProtocol.string
 import kotlinx.serialization.json.*
 
 /** OpenAI GA Realtime WebSocket messages. The phone audio bridge supplies 16 kHz PCM. */
@@ -26,9 +27,25 @@ internal object OpenAiCallProtocol {
         }
     }.toString()
 
+    fun errorKind(error: JsonObject?): VolcRealtimeException.Kind = when (error?.string("code")) {
+        "invalid_api_key", "insufficient_permissions" -> VolcRealtimeException.Kind.AUTH
+        "rate_limit_exceeded", "insufficient_quota" -> VolcRealtimeException.Kind.RATE_LIMITED
+        else -> VolcRealtimeException.Kind.PROVIDER
+    }
+
+    fun truncate(itemId: String, index: Int, playedMs: Int) = buildJsonObject {
+        put("type", "conversation.item.truncate")
+        put("item_id", itemId)
+        put("content_index", index)
+        put("audio_end_ms", playedMs)
+    }.toString()
+
     fun greeting(text: String) = buildJsonObject {
         put("type", "response.create")
-        putJsonObject("response") { put("instructions", "Speak this greeting verbatim: " + text) }
+        putJsonObject("response") {
+            put("instructions", "Speak this greeting verbatim: " + text)
+            put("tool_choice", "none")
+        }
     }.toString()
 
     fun toolResult(id: String, result: JsonObject) = buildJsonObject {

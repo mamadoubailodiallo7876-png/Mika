@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="calls_title">AI 전화</string>
-    <string name="calls_entry_sub">선택한 음성 서비스 실시간 음성을 사용하는 이동통신 통화</string>
+    <string name="calls_entry_sub">실시간 음성을 사용하는 이동통신 통화</string>
     <string name="calls_action_failed">통화 작업에 실패했습니다. 준비 상태를 확인한 후 다시 시도하세요.</string>
     <string name="calls_permissions_required">전화와 알림 권한이 필요합니다.</string>
     <string name="calls_ai_active">AI가 통화 중입니다</string>
@@ -53,7 +53,7 @@
     <string name="calls_greeting">첫인사</string>
     <string name="calls_instructions">통화 목적 및 지시</string>
     <string name="calls_duration">최대 AI 응대 시간(15~600초)</string>
-    <string name="calls_speaker">선택한 음성 서비스 음성 ID</string>
+    <string name="calls_speaker">음성 ID</string>
     <string name="calls_audio_route">통화 오디오 경로</string>
     <string name="calls_audio_verified">이 휴대전화에서 AI 통화 중 양쪽 모두 소리가 들리는지 확인했습니다</string>
     <string name="calls_verify_note">먼저 테스트 전화를 직접 걸거나 받은 뒤 양방향으로 소리가 들리는지 확인하고 자동 응답을 켜세요.</string>

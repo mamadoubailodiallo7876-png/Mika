@@ -32,6 +32,7 @@ internal class CallPcmBridge(
         counters: CallMediaCounters?,
         onTranscript: (String, String) -> Unit,
         onFinalTranscript: (String, String) -> Unit = { _, _ -> },
+        playedOutputFrames: suspend () -> Long = { 0L },
         awaitFarewellDrain: suspend (CallFarewellFence) -> Boolean = { false },
         commitFarewell: () -> Boolean = { false },
         sendDtmf: suspend (String) -> CallDtmfResult = { CallDtmfResult.rejected("unavailable", it.length) },
@@ -117,6 +118,8 @@ internal class CallPcmBridge(
                                 farewell.cancelCandidate()
                                 if (farewell.hasPlaybackSinceFlush) {
                                     playbackQueue.invalidate()
+                                    val truncation = session.playbackTruncation?.takeIf { it.hasAudio }
+                                    val heardFrames = if (truncation != null) playedOutputFrames() else 0L
                                     // First release any writer blocked on a full pipe. Flush again under
                                     // the writer lock to remove the last chunk that raced the first flush.
                                     val cleared = interruptPlayback() && withTimeoutOrNull(750) {
@@ -124,6 +127,9 @@ internal class CallPcmBridge(
                                     } == true
                                     if (!cleared) throw CallMediaFailure("通话音频无法及时停止，已交还系统")
                                     farewell.afterPairedFlush()
+                                    if (truncation?.interrupt(heardFrames) == false) {
+                                        throw CallMediaFailure("无法同步已播放的电话音频，已交还系统")
+                                    }
                                 }
                                 // Some providers report a second cancellation after user speech starts.
                                 // Without newly accepted PCM, another flush would only reset the route.

@@ -1430,6 +1430,15 @@ class CallRuntime(private val app: MikaApp) {
                                 publish()
                             }
                         },
+                        playedOutputFrames = {
+                            withContext(Dispatchers.IO) {
+                                val stats = helper.callAudioStats(w.audioOwner)
+                                if (stats?.getBoolean("upPlaybackHeadFresh") == true && stats.getBoolean("upPlaybackRouteReady")) {
+                                    (stats.getLong("upPlaybackHeadFrames") - stats.getLong("upPlaybackPrimeFrames"))
+                                        .coerceIn(0L, stats.getLong("upPlaybackEpochDataBytes") / 2L)
+                                } else 0L
+                            }
+                        },
                         awaitFarewellDrain = { fence ->
                             if (!sameActiveMuteTarget(w, target) || target.suppressed || work !== w) false
                             else awaitFarewellPlayback(helper, w, fence)
