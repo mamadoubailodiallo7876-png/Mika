@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="device_dirs_title">기기 폴더</string>
-    <string name="device_dirs_explanation">폴더 힌트는 Mika가 파일을 찾는 데 도움이 돼요. 힌트를 추가해도 접근 권한이 부여되지 않으므로 저장한 폴더마다 별도로 허용해 주세요.</string>
+    <string name="device_dirs_explanation">폴더 힌트는 Jarvis가 파일을 찾는 데 도움이 돼요. 힌트를 추가해도 접근 권한이 부여되지 않으므로 저장한 폴더마다 별도로 허용해 주세요.</string>
     <string name="device_dirs_authorize">이 폴더 읽기 허용</string>
     <string name="device_dirs_recursive">하위 폴더 포함</string>
     <string name="device_dirs_not_synced">권한이 동기화되지 않음</string>
@@ -24,8 +24,8 @@
     <string name="device_dirs_denied">접근 거부됨</string>
     <string name="device_dirs_unknown">상태를 확인할 수 없음</string>
     <string name="device_dirs_entry">폴더 힌트</string>
-    <string name="device_dirs_entry_sub">Mika가 다운로드한 파일을 찾도록 도와줘요</string>
+    <string name="device_dirs_entry_sub">Jarvis가 다운로드한 파일을 찾도록 도와줘요</string>
     <string name="device_dirs_source_preset">기본 설정</string>
     <string name="device_dirs_source_user">내가 수정함</string>
-    <string name="device_dirs_source_mika">Mika가 수정함</string>
+    <string name="device_dirs_source_mika">Jarvis가 수정함</string>
 </resources>

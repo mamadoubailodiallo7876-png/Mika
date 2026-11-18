@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="persona_title">شخصیت</string>
-    <string name="persona_sub">نحوه صحبت Mika با شما را انتخاب کنید</string>
+    <string name="persona_sub">نحوه صحبت Jarvis با شما را انتخاب کنید</string>
     <string name="persona_default">پیش‌فرض</string>
-    <string name="persona_default_sub">لحن معمول Mika</string>
+    <string name="persona_default_sub">لحن معمول Jarvis</string>
     <string name="persona_empty">هنوز شخصیتی وجود ندارد</string>
-    <string name="persona_empty_sub">شخصیت نحوه صحبت Mika را تغییر می‌دهد، نه کاری که می‌تواند انجام دهد.</string>
+    <string name="persona_empty_sub">شخصیت نحوه صحبت Jarvis را تغییر می‌دهد، نه کاری که می‌تواند انجام دهد.</string>
     <string name="persona_new">شخصیت جدید</string>
     <string name="persona_edit">ویرایش شخصیت</string>
     <string name="persona_name">نام</string>
@@ -16,7 +16,7 @@
     <string name="persona_counter">%1$d نویسه · حدود %2$d توکن</string>
     <string name="persona_preview">پیش‌نمایش کامل دستور</string>
     <string name="persona_preview_hide">پنهان کردن پیش‌نمایش</string>
-    <string name="persona_preview_note">قوانین خاکستری ثابت هستند. شخصیت می‌تواند لحن و جمله‌بندی را تغییر دهد، نه ایمنی، مجوزها یا گزارش‌های Mika را.</string>
+    <string name="persona_preview_note">قوانین خاکستری ثابت هستند. شخصیت می‌تواند لحن و جمله‌بندی را تغییر دهد، نه ایمنی، مجوزها یا گزارش‌های Jarvis را.</string>
     <string name="persona_chip">شخصیت: %1$s</string>
     <string name="persona_manage">مدیریت شخصیت‌ها</string>
     <string name="persona_switch_note">تعویض فقط روی پیام‌های بعدی این گفتگو اثر می‌گذارد.</string>

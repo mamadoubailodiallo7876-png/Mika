@@ -59,7 +59,7 @@ android {
         // 真机验收时并排安装,保留发行版和用户数据;默认构建标识不变。
         if (providers.gradleProperty("devInstall").isPresent) getByName("debug") {
             applicationIdSuffix = ".dev"
-            resValue("string", "app_name", "Mika Dev")
+            resValue("string", "app_name", "Jarvis Dev")
         }
         // 看流畅度用的包:和发布版一样不可调试(调试包不做预先编译,界面慢好几倍,手感不作数),
         // 用本机调试签名,能直接覆盖调试包、保留数据;可被性能工具采样。./gradlew :app:assemblePerf
@@ -71,7 +71,7 @@ android {
             // 真机比较滑动手感也用优化包,仍覆盖 .dev 测试版并保留它的数据。
             if (providers.gradleProperty("devInstall").isPresent) {
                 applicationIdSuffix = ".dev"
-                resValue("string", "app_name", "Mika Dev")
+                resValue("string", "app_name", "Jarvis Dev")
             }
         }
         // 本地日志检查包：并排安装，允许 adb run-as，首次启动即记录详细 Trace。
@@ -81,7 +81,7 @@ android {
             versionNameSuffix = "-logs"
             isDebuggable = true
             isProfileable = false
-            resValue("string", "app_name", "Mika Logs")
+            resValue("string", "app_name", "Jarvis Logs")
             buildConfigField("boolean", "ADB_LOGS", "true")
             matchingFallbacks += "release"
         }
@@ -118,6 +118,11 @@ dependencies {
     implementation(libs.mlkit.text.recognition.chinese)
     // 微信绑定二维码只在本机编码，不调用在线图片服务。
     implementation(libs.zxing.core)
+    // Jarvis 驾驶模式:唤醒词(sherpa-onnx 关键词检测)、离线朗读(模型包是 tar.bz2,解压用 commons-compress)、Android Auto
+    implementation(libs.sherpa.onnx)
+    implementation(libs.commons.compress)
+    implementation(libs.androidx.car.app)
+    implementation(libs.androidx.lifecycle.service)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

@@ -6,7 +6,7 @@
     <string name="sms_login_limits">对已配置原生 App 自动登录：严格匹配 App 签名、发送方、服务和账户，无需逐次确认。身份、权限或成功证据不足时手工接管。验证后恢复原生文字读屏；本次任务图像留在本机。</string>
     <string name="sms_login_permission">Android 短信权限</string>
     <string name="sms_login_error">权限或保存失败。请手工登录，并检查系统应用权限。</string>
-    <string name="sms_login_disclosure">仅为你在此配置的账户和签名 App 开启自动短信登录。Mika 无需再次询问即可请求、填码、提交登录，再在本机核验账户。不允许支付、找回或注册；短信和验证码不保存、不发给模型。关闭或删除配置立即撤销。</string>
+    <string name="sms_login_disclosure">仅为你在此配置的账户和签名 App 开启自动短信登录。Jarvis 无需再次询问即可请求、填码、提交登录，再在本机核验账户。不允许支付、找回或注册；短信和验证码不保存、不发给模型。关闭或删除配置立即撤销。</string>
     <string name="sms_login_sender">准确的短信发送方</string>
     <string name="sms_login_signature">短信括号内的服务名</string>
     <string name="sms_login_account">双方可见的账户数字（4–11 位）</string>

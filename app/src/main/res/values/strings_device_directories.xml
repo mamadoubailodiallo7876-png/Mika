@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="device_dirs_title">Device folders</string>
-    <string name="device_dirs_explanation">Folder hints help Mika find files. Adding a hint does not grant access; authorize each saved folder separately.</string>
+    <string name="device_dirs_explanation">Folder hints help Jarvis find files. Adding a hint does not grant access; authorize each saved folder separately.</string>
     <string name="device_dirs_authorize">Allow reading this directory</string>
     <string name="device_dirs_recursive">Include subfolders</string>
     <string name="device_dirs_not_synced">Authorization not synced</string>
@@ -24,8 +24,8 @@
     <string name="device_dirs_denied">Access denied</string>
     <string name="device_dirs_unknown">Status unavailable</string>
     <string name="device_dirs_entry">Folder hints</string>
-    <string name="device_dirs_entry_sub">Help Mika find downloaded files</string>
+    <string name="device_dirs_entry_sub">Help Jarvis find downloaded files</string>
     <string name="device_dirs_source_preset">Preset</string>
     <string name="device_dirs_source_user">Edited by you</string>
-    <string name="device_dirs_source_mika">Edited by Mika</string>
+    <string name="device_dirs_source_mika">Edited by Jarvis</string>
 </resources>

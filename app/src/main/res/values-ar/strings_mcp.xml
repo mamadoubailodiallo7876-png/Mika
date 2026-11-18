@@ -56,7 +56,7 @@
     <string name="mcp_usb_client">3. إعداد عميل MCP</string>
     <string name="mcp_usb_client_sub">يعرض أمر البدء العنوان والرمز على الكمبيوتر. أضفهما إلى العميل وتحقق من تحديث وقت الطلب أعلاه.</string>
     <string name="mcp_copy_instructions">نسخ تعليمات الإعداد</string>
-    <string name="mcp_usb_client_instructions">Add a Streamable HTTP MCP server at http://127.0.0.1:%1$d/mcp on this computer. Set the Authorization header to Bearer followed by the token printed by the Mika start command. Do not print the token in the conversation. Connect or refresh the tool list and check that the request time on the phone updates. Guide: https://github.com/wangzan101/Mika/blob/main/docs/mcp.en.md</string>
+    <string name="mcp_usb_client_instructions">Add a Streamable HTTP MCP server at http://127.0.0.1:%1$d/mcp on this computer. Set the Authorization header to Bearer followed by the token printed by the Jarvis start command. Do not print the token in the conversation. Connect or refresh the tool list and check that the request time on the phone updates. Guide: https://github.com/wangzan101/Mika/blob/main/docs/mcp.en.md</string>
     <string name="mcp_network_enable">السماح باتصال الشبكة هذا</string>
     <string name="mcp_network_enable_action">تفعيل الوصول عبر الشبكة</string>
     <string name="mcp_network_address_step">1. اختيار عنوان يمكن الوصول إليه</string>

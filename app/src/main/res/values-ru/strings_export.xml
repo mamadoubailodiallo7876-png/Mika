@@ -26,9 +26,9 @@
     <string name="export_no_messages">Нет сообщений для экспорта</string>
     <string name="export_current_turn">Текущий ход не включается.</string>
     <string name="export_warnings">Не удалось включить элементов: %1$d.</string>
-    <string name="export_filename_fallback">Диалог Mika</string>
+    <string name="export_filename_fallback">Диалог Jarvis</string>
     <string name="export_label_user">Пользователь</string>
-    <string name="export_label_mika">Mika</string>
+    <string name="export_label_mika">Jarvis</string>
     <string name="export_label_steer">Сообщение во время задачи</string>
     <string name="export_label_answer">Ответ</string>
     <string name="export_label_tool_steps">Шаги инструментов</string>

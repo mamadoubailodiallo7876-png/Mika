@@ -679,7 +679,7 @@ fun LanguageScreen(language: AppLanguage, onLanguage: (AppLanguage) -> Unit, onB
             ThemeAccent.entries.forEachIndexed { idx, a ->
                 RadioRow(
                     accentLabel(a), selected = a == themeAccent, first = idx == 0, enabled = !followingImage,
-                    subtitle = if (a == ThemeAccent.Blue) stringResource(R.string.accent_default) else null,
+                    subtitle = if (a == ThemeAccent.Reactor) stringResource(R.string.accent_default) else null,
                     onClick = { if (a != themeAccent) flags.setThemeAccent(a) },
                 ) {
                     // 色块按此刻的深浅色画,和选上以后看到的一样
@@ -833,6 +833,9 @@ private fun SkinControls(skin: SkinSpec, onChange: (SkinSpec) -> Unit, onClear: 
 
 fun accentLabel(accent: ThemeAccent): String = tr(
     when (accent) {
+        ThemeAccent.Reactor -> R.string.accent_reactor
+        ThemeAccent.Gold -> R.string.accent_gold
+        ThemeAccent.Crimson -> R.string.accent_crimson
         ThemeAccent.Blue -> R.string.accent_blue
         ThemeAccent.Indigo -> R.string.accent_indigo
         ThemeAccent.Purple -> R.string.accent_purple

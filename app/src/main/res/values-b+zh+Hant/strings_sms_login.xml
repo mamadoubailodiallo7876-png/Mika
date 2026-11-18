@@ -6,7 +6,7 @@
     <string name="sms_login_limits">已設定的原生 App 可自動登入，嚴格比對簽章、發送方、服務及帳戶，無須每次確認。證據或權限不足時手動接管。驗證後恢復原生文字讀屏；本次圖像留在本機。</string>
     <string name="sms_login_permission">Android 簡訊權限</string>
     <string name="sms_login_error">權限或儲存失敗。請手動登入並檢查系統權限。</string>
-    <string name="sms_login_disclosure">僅對此處設定的帳戶及簽章 App 啟用自動登入。Mika 無須再次詢問即可請求、填碼、提交並在本機核驗帳戶。不允許付款、找回或註冊；不儲存或傳送簡訊及驗證碼至模型。關閉或刪除即撤銷。</string>
+    <string name="sms_login_disclosure">僅對此處設定的帳戶及簽章 App 啟用自動登入。Jarvis 無須再次詢問即可請求、填碼、提交並在本機核驗帳戶。不允許付款、找回或註冊；不儲存或傳送簡訊及驗證碼至模型。關閉或刪除即撤銷。</string>
     <string name="sms_login_sender">確切簡訊發送方</string>
     <string name="sms_login_signature">括號內服務名稱</string>
     <string name="sms_login_account">共同可見帳戶數字（4–11 位）</string>

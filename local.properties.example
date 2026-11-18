@@ -1,0 +1,3 @@
+# Copy to local.properties (git-ignored) and fill in.
+# Only needed if Android Studio doesn't set it for you:
+# sdk.dir=/path/to/Android/sdk

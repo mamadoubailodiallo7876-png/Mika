@@ -19,6 +19,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- Jarvis 驾驶模式:常驻唤醒词和语音对话的前台服务(麦克风类型) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <!-- Jarvis 驾驶模式:连上车载蓝牙时自动进入(安卓 12 以前用 BLUETOOTH,12 起用运行时的 BLUETOOTH_CONNECT) -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- 通话功能:拨号、读通话状态,以及安卓 13+ 的「通话助手」框架(伴侣角色经 shell 授予)。 -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
@@ -399,6 +404,72 @@
             </intent-filter>
         </receiver>
         <receiver android:name=".teach.TeachReceiver" android:exported="false" />
+
+        <!-- 工具调用批准通知上的按钮 -->
+        <receiver android:name=".approval.ToolApprovalReceiver" android:exported="false" />
+
+        <!-- ===== Jarvis 驾驶模式(driving 包):唤醒词、离线朗读、免提界面、Android Auto ===== -->
+        <!-- 入口、权限和开关;只有它带桌面图标,不碰 Mika 原有的界面 -->
+        <activity
+            android:name=".driving.DrivingSettingsActivity"
+            android:exported="true"
+            android:label="Jarvis Voice"
+            android:icon="@mipmap/ic_launcher"
+            android:theme="@android:style/Theme.Material.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".driving.DrivingActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
+
+        <!-- 没有界面的跳板:开机通知点进来,在前台起 Jarvis 服务 -->
+        <activity
+            android:name=".driving.JarvisStartActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.NoDisplay" />
+
+        <receiver android:name=".driving.JarvisBootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".driving.DrivingService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+
+        <!-- 系统发的 ACL_CONNECTED 也能送到不导出的接收器 -->
+        <receiver android:name=".driving.BluetoothTrigger" android:exported="false">
+            <intent-filter>
+                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name=".driving.JarvisCarAppService" android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.car.app.CarAppService" />
+                <!-- OTHER 不是 Car App Library 定义的类别(见 DRIVING_MODE.md);IOT 是能被 Android Auto 识别的类别 -->
+                <category android:name="androidx.car.app.category.IOT" />
+                <category android:name="androidx.car.app.category.OTHER" />
+            </intent-filter>
+        </service>
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/jarvis_automotive_app_desc" />
+        <meta-data android:name="androidx.car.app.minCarApiLevel" android:value="1" />
     </application>
 
 </manifest>

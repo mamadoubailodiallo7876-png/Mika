@@ -56,7 +56,7 @@
     <string name="mcp_usb_client">3. Configure your MCP client</string>
     <string name="mcp_usb_client_sub">The start command prints the address and token on the computer. Add them to your client and check that the request time above updates.</string>
     <string name="mcp_copy_instructions">Copy setup instructions</string>
-    <string name="mcp_usb_client_instructions">Add a Streamable HTTP MCP server at http://127.0.0.1:%1$d/mcp on this computer. Set the Authorization header to Bearer followed by the token printed by the Mika start command. Do not print the token in the conversation. Connect or refresh the tool list and check that the request time on the phone updates. Guide: https://github.com/wangzan101/Mika/blob/main/docs/mcp.en.md</string>
+    <string name="mcp_usb_client_instructions">Add a Streamable HTTP MCP server at http://127.0.0.1:%1$d/mcp on this computer. Set the Authorization header to Bearer followed by the token printed by the Jarvis start command. Do not print the token in the conversation. Connect or refresh the tool list and check that the request time on the phone updates. Guide: https://github.com/wangzan101/Mika/blob/main/docs/mcp.en.md</string>
     <string name="mcp_network_enable">Allow this network connection</string>
     <string name="mcp_network_enable_action">Enable network access</string>
     <string name="mcp_network_address_step">1. Choose a reachable address</string>

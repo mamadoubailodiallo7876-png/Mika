@@ -6,7 +6,7 @@
     <string name="sms_login_limits">Automatic login for configured native apps: exact app signature, sender, service and account matching. No per-login confirmation. Missing identity, permission or verified success stays manual. Native text observation resumes after verification; images remain local during this run.</string>
     <string name="sms_login_permission">Android SMS permission</string>
     <string name="sms_login_error">Permission or save failed. Keep manual login; check Android app permissions.</string>
-    <string name="sms_login_disclosure">Enable automatic SMS login only for accounts and signed apps you configure here. Mika may request, fill and submit login without asking again, then verify the account locally. No payment, recovery or registration. SMS and codes are never saved or sent to the model. Disable or delete a profile to revoke.</string>
+    <string name="sms_login_disclosure">Enable automatic SMS login only for accounts and signed apps you configure here. Jarvis may request, fill and submit login without asking again, then verify the account locally. No payment, recovery or registration. SMS and codes are never saved or sent to the model. Disable or delete a profile to revoke.</string>
     <string name="sms_login_sender">Exact SMS sender</string>
     <string name="sms_login_signature">Service name inside brackets</string>
     <string name="sms_login_account">Matching account digits (4–11)</string>

@@ -33,7 +33,7 @@
     <string name="workflow_delete_template">حذف قالب المهمة؟</string>
     <string name="workflow_step_number">الخطوة %1$d</string>
     <string name="workflow_step_name">اسم الخطوة</string>
-    <string name="workflow_instruction">ماذا ينبغي أن تفعل Mika؟</string>
+    <string name="workflow_instruction">ماذا ينبغي أن تفعل Jarvis؟</string>
     <string name="workflow_move_up">لأعلى</string>
     <string name="workflow_move_down">لأسفل</string>
     <string name="workflow_add_step">إضافة خطوة</string>

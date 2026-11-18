@@ -56,7 +56,7 @@
     <string name="mcp_usb_client">3. Настройте клиент MCP</string>
     <string name="mcp_usb_client_sub">Команда запуска выводит адрес и токен на компьютере. Добавьте их в клиент и проверьте, что время запроса выше обновляется.</string>
     <string name="mcp_copy_instructions">Копировать инструкцию по настройке</string>
-    <string name="mcp_usb_client_instructions">Добавь на этом компьютере сервер MCP типа Streamable HTTP по адресу http://127.0.0.1:%1$d/mcp. В заголовке Authorization укажи Bearer и токен, который вывела команда запуска Mika. Не выводи токен в разговор. Подключись или обнови список инструментов и проверь, что время запроса на телефоне обновилось. Руководство: https://github.com/wangzan101/Mika/blob/main/docs/mcp.en.md</string>
+    <string name="mcp_usb_client_instructions">Добавь на этом компьютере сервер MCP типа Streamable HTTP по адресу http://127.0.0.1:%1$d/mcp. В заголовке Authorization укажи Bearer и токен, который вывела команда запуска Jarvis. Не выводи токен в разговор. Подключись или обнови список инструментов и проверь, что время запроса на телефоне обновилось. Руководство: https://github.com/wangzan101/Mika/blob/main/docs/mcp.en.md</string>
     <string name="mcp_network_enable">Разрешить это сетевое подключение</string>
     <string name="mcp_network_enable_action">Включить сетевой доступ</string>
     <string name="mcp_network_address_step">1. Выберите доступный адрес</string>

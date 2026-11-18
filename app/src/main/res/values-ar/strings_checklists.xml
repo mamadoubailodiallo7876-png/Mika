@@ -14,7 +14,7 @@
     <string name="checklist_content">المحتوى</string>
     <string name="checklist_delete_question">حذف القائمة وسجلها؟</string>
     <string name="checklist_supplement">معلومات إضافية</string>
-    <string name="checklist_next">ماذا يجب أن تفعل Mika بعد ذلك؟</string>
+    <string name="checklist_next">ماذا يجب أن تفعل Jarvis بعد ذلك؟</string>
     <string name="checklist_fill_input">ملء مربع الإدخال</string>
     <string name="checklist_previous_title">العنوان السابق: %1$s</string>
     <string name="checklist_added">مضاف أو معاد كتابته</string>

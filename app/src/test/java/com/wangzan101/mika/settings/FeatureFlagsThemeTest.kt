@@ -11,11 +11,11 @@ import org.junit.Test
 
 /** 外观改了(设置页或任务里)界面当场跟着换,不靠重建界面。 */
 class FeatureFlagsThemeTest {
-    @Test fun defaultsToSystemAndUnknownFallsBack() {
+    @Test fun defaultsToDarkAndUnknownFallsBack() {
         val prefs = FeatureFlagsCapsuleTest.MemoryPrefs()
-        assertEquals(ThemeMode.System, FeatureFlags(prefs).themeMode())
+        assertEquals(ThemeMode.Dark, FeatureFlags(prefs).themeMode())
         prefs.edit().putString("theme_mode", "Sepia").commit()
-        assertEquals(ThemeMode.System, FeatureFlags(prefs).themeMode())
+        assertEquals(ThemeMode.Dark, FeatureFlags(prefs).themeMode())
     }
 
     @Test fun changesEmitCurrentThenEachChange() = runTest {
@@ -23,18 +23,18 @@ class FeatureFlagsThemeTest {
         val seen = mutableListOf<ThemeMode>()
         val job = launch { flags.themeModeChanges().take(3).toList(seen) }
         runCurrent()
-        flags.setThemeMode(ThemeMode.Dark)
+        flags.setThemeMode(ThemeMode.Light)
         runCurrent()
-        SelfConfigImpl(flags).set("appearance", "light")
+        SelfConfigImpl(flags).set("appearance", "dark")
         job.join()
-        assertEquals(listOf(ThemeMode.System, ThemeMode.Dark, ThemeMode.Light), seen)
+        assertEquals(listOf(ThemeMode.Dark, ThemeMode.Light, ThemeMode.Dark), seen)
     }
 
-    @Test fun accentDefaultsToBlueAndUnknownFallsBack() {
+    @Test fun accentDefaultsToReactorAndUnknownFallsBack() {
         val prefs = FeatureFlagsCapsuleTest.MemoryPrefs()
-        assertEquals(ThemeAccent.Blue, FeatureFlags(prefs).themeAccent())
+        assertEquals(ThemeAccent.Reactor, FeatureFlags(prefs).themeAccent())
         prefs.edit().putString("theme_accent", "Neon").commit()
-        assertEquals(ThemeAccent.Blue, FeatureFlags(prefs).themeAccent())
+        assertEquals(ThemeAccent.Reactor, FeatureFlags(prefs).themeAccent())
     }
 
     @Test fun accentChangesEmitCurrentThenEachChange() = runTest {
@@ -46,7 +46,7 @@ class FeatureFlagsThemeTest {
         runCurrent()
         SelfConfigImpl(flags).set("accent_color", "graphite")
         job.join()
-        assertEquals(listOf(ThemeAccent.Blue, ThemeAccent.Teal, ThemeAccent.Graphite), seen)
+        assertEquals(listOf(ThemeAccent.Reactor, ThemeAccent.Teal, ThemeAccent.Graphite), seen)
     }
 
     @Test fun skinStartsEmptyWithReadableDefaults() {

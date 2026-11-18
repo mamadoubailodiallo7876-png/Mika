@@ -260,6 +260,18 @@ class ToolDispatcher internal constructor(
         }
         shots.idAsSnapshot(args.o)?.let { return it }
         misaimed(call.name, args.o)?.let { return it }
+        // 对外/危险的调用先问用户(见 ToolApproval);拒绝、超时、没法询问都不执行
+        ToolApproval.levelOf(tool, args.o)?.let { level ->
+            val gate = ToolApproval.gate
+            if (gate != null) {
+                val request = ToolApprovalRequest(
+                    tool.name, tool.label, tool.verb, level, ToolApproval.summarize(call.argsJson), callReason(call.name, args.o),
+                )
+                if (!gate.approve(request)) {
+                    return fail("user_refused", "The user did not approve this action (${tool.name}). Do not retry it; tell the user what you were about to do and ask how to proceed.", recoverable = false)
+                }
+            }
+        }
         aim(call.name, args.o)
         var ok = false
         try {

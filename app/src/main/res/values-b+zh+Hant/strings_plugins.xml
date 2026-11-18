@@ -4,7 +4,7 @@
     <string name="plugins_install">安裝外掛</string>
     <string name="plugins_installing">正在安裝…</string>
     <string name="plugins_empty">還沒有外掛</string>
-    <string name="plugins_empty_sub">安裝外掛 zip 可以給 Mika 增加它能讀的技能。外掛不能改 App 設定，也不能讀你的其他資料。</string>
+    <string name="plugins_empty_sub">安裝外掛 zip 可以給 Jarvis 增加它能讀的技能。外掛不能改 App 設定，也不能讀你的其他資料。</string>
     <string name="plugins_enabled">已啟用</string>
     <string name="plugins_disabled">已停用</string>
     <string name="plugins_skills">技能</string>
@@ -16,7 +16,7 @@
     <string name="plugins_uninstall_body">解除安裝這個外掛和它的技能？對話和記憶不受影響。</string>
     <string name="plugins_install_failed">安裝失敗：%1$s</string>
     <string name="plugins_unsupported_in_version">這個版本只支援技能外掛。</string>
-    <string name="plugins_error_too_new">這個外掛需要更新版本的 Mika。</string>
+    <string name="plugins_error_too_new">這個外掛需要更新版本的 Jarvis。</string>
     <string name="plugins_error_unsafe">安裝包裡有不安全的路徑，已拒絕安裝。</string>
     <string name="plugins_error_too_large">安裝包太大。</string>
     <string name="plugins_error_missing_manifest">安裝包根目錄沒有 manifest.json。</string>

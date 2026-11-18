@@ -24,7 +24,7 @@
     <string name="voice_mic_unavailable">O microfone não está disponível. Outro app pode estar usando</string>
     <string name="voice_hold_to_talk">Segure para falar</string>
     <string name="voice_mic_blocked_title">O microfone ainda não está disponível</string>
-    <string name="voice_mic_blocked_body">A gravação já está permitida, mas o Mika ainda não consegue gravar. Confira se a opção de acesso ao microfone nas Configurações rápidas está ativada (Android 12 ou superior) e se o microfone do Mika não está desativado no gerenciador de permissões do sistema. Outro app também pode estar usando o microfone.</string>
+    <string name="voice_mic_blocked_body">A gravação já está permitida, mas o Jarvis ainda não consegue gravar. Confira se a opção de acesso ao microfone nas Configurações rápidas está ativada (Android 12 ou superior) e se o microfone do Jarvis não está desativado no gerenciador de permissões do sistema. Outro app também pode estar usando o microfone.</string>
     <string name="voice_provider_failed">Não foi possível transformar em texto: %1$s</string>
     <string name="voice_unavailable_title">A entrada por voz não está pronta</string>
     <string name="voice_unavailable_no_engine">Este celular não tem reconhecimento de fala integrado, e nenhum modelo de fala para texto foi escolhido. Escolha o modelo de fala de um provedor em Configurações › Modelos › Fala para texto e vai funcionar.</string>
@@ -32,17 +32,17 @@
     <string name="voice_unavailable_system_silent">O reconhecimento de fala integrado do celular não respondeu, então nenhuma palavra chegou. Escolha o modelo de fala de um provedor em Configurações › Modelos › Fala para texto e vai funcionar.</string>
     <string name="voice_unavailable_system_failed">Não foi possível iniciar o reconhecimento de fala integrado do celular. Tente novamente ou escolha outra forma de reconhecimento em Configurações › Modelos › Fala para texto.</string>
     <string name="voice_service_permission_title">O reconhecimento de fala do celular ainda não pode gravar</string>
-    <string name="voice_service_permission_body">“%1$s” é o app que faz o reconhecimento de fala neste celular e ainda não tem permissão para gravar áudio, então não consegue ouvir você. A permissão de microfone do Mika está correta. Abra a página de permissões desse app e ative o microfone; depois volte e segure para falar de novo. Você também pode escolher outra forma de reconhecimento em Configurações › Modelos › Fala para texto.</string>
+    <string name="voice_service_permission_body">“%1$s” é o app que faz o reconhecimento de fala neste celular e ainda não tem permissão para gravar áudio, então não consegue ouvir você. A permissão de microfone do Jarvis está correta. Abra a página de permissões desse app e ative o microfone; depois volte e segure para falar de novo. Você também pode escolher outra forma de reconhecimento em Configurações › Modelos › Fala para texto.</string>
     <string name="voice_service_settings_failed">Não foi possível abrir a página de configurações de “%1$s”. Procure o app na lista de apps do sistema e ative o microfone.</string>
     <string name="voice_unavailable_provider_gone">O provedor do modelo de fala escolhido foi removido. Escolha outro em Configurações › Modelos › Fala para texto.</string>
     <string name="voice_unavailable_off">Fala para texto está desativado. Escolha uma opção em Configurações › Modelos › Fala para texto.</string>
     <string name="voice_go_pick">Escolher</string>
-    <string name="voice_permission_title">O Mika precisa do microfone</string>
-    <string name="voice_permission_body">Para ouvir você enquanto segura para falar, o Mika precisa gravar áudio. A permissão foi negada antes, então o celular não vai perguntar de novo. Ative o microfone na página de permissões do Mika nas configurações do sistema.</string>
+    <string name="voice_permission_title">O Jarvis precisa do microfone</string>
+    <string name="voice_permission_body">Para ouvir você enquanto segura para falar, o Jarvis precisa gravar áudio. A permissão foi negada antes, então o celular não vai perguntar de novo. Ative o microfone na página de permissões do Jarvis nas configurações do sistema.</string>
     <string name="voice_permission_open">Abrir configurações</string>
     <string name="capsule_voice_talk">Falar</string>
     <string name="capsule_voice_send">Enviar</string>
-    <string name="capsule_voice_answer_title">Respondendo ao Mika</string>
+    <string name="capsule_voice_answer_title">Respondendo ao Jarvis</string>
     <string name="capsule_voice_continue_title">Continuando “%1$s”</string>
     <string name="capsule_voice_cancel">Cancelar</string>
     <string name="capsule_voice_edit">Editar</string>
@@ -56,8 +56,8 @@
     <string name="capsule_voice_steered">Disse à tarefa: %1$s</string>
     <string name="capsule_voice_answered">Respondido: %1$s</string>
     <string name="capsule_voice_sent">Enviado: %1$s</string>
-    <string name="capsule_voice_need_mic">Toque para permitir o microfone no Mika</string>
+    <string name="capsule_voice_need_mic">Toque para permitir o microfone no Jarvis</string>
     <string name="capsule_voice_not_ready">A entrada por voz não está pronta · toque</string>
     <string name="capsule_voice_service_need_mic">O reconhecimento de fala ainda não pode gravar · toque</string>
-    <string name="capsule_voice_open">Abrir o Mika</string>
+    <string name="capsule_voice_open">Abrir o Jarvis</string>
 </resources>

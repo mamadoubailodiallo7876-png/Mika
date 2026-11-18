@@ -6,7 +6,7 @@
     <string name="sms_login_limits">Login automático em apps nativos configurados, verificando assinatura, remetente, serviço e conta. Sem confirmação por tentativa. Sem permissão ou prova de sucesso, use modo manual. Após verificar, leitura de texto retorna; imagens ficam locais.</string>
     <string name="sms_login_permission">Permissão de SMS do Android</string>
     <string name="sms_login_error">Falha na permissão ou gravação. Entre manualmente e verifique as permissões.</string>
-    <string name="sms_login_disclosure">Autorize somente apps assinados e contas configuradas aqui. Mika pode solicitar, preencher e enviar o login sem perguntar novamente, depois verificar a conta localmente. Sem pagamentos, recuperação ou cadastro. SMS e códigos não são salvos nem enviados ao modelo. Desative ou exclua o perfil para revogar.</string>
+    <string name="sms_login_disclosure">Autorize somente apps assinados e contas configuradas aqui. Jarvis pode solicitar, preencher e enviar o login sem perguntar novamente, depois verificar a conta localmente. Sem pagamentos, recuperação ou cadastro. SMS e códigos não são salvos nem enviados ao modelo. Desative ou exclua o perfil para revogar.</string>
     <string name="sms_login_sender">Remetente exato do SMS</string>
     <string name="sms_login_signature">Serviço entre colchetes</string>
     <string name="sms_login_account">Dígitos comuns da conta (4–11)</string>

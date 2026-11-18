@@ -56,7 +56,7 @@
     <string name="mcp_usb_client">3. Configurar o cliente MCP</string>
     <string name="mcp_usb_client_sub">O comando de início mostra o endereço e o token no computador. Adicione-os ao seu cliente e confira se o horário da solicitação acima é atualizado.</string>
     <string name="mcp_copy_instructions">Copiar instruções de configuração</string>
-    <string name="mcp_usb_client_instructions">Adicione um servidor MCP Streamable HTTP em http://127.0.0.1:%1$d/mcp neste computador. Defina o cabeçalho Authorization como Bearer seguido do token exibido pelo comando de início do Mika. Não exiba o token na conversa. Conecte ou atualize a lista de ferramentas e confira se o horário da solicitação no celular é atualizado. Guia: https://github.com/wangzan101/Mika/blob/main/docs/mcp.en.md</string>
+    <string name="mcp_usb_client_instructions">Adicione um servidor MCP Streamable HTTP em http://127.0.0.1:%1$d/mcp neste computador. Defina o cabeçalho Authorization como Bearer seguido do token exibido pelo comando de início do Jarvis. Não exiba o token na conversa. Conecte ou atualize a lista de ferramentas e confira se o horário da solicitação no celular é atualizado. Guia: https://github.com/wangzan101/Mika/blob/main/docs/mcp.en.md</string>
     <string name="mcp_network_enable">Permitir esta conexão de rede</string>
     <string name="mcp_network_enable_action">Ativar acesso pela rede</string>
     <string name="mcp_network_address_step">1. Escolher um endereço acessível</string>

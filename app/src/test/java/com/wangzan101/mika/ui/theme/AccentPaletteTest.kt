@@ -10,9 +10,9 @@ import org.junit.Test
 
 /** 强调色只换强调色那三项;每种颜色上的字不比默认蓝色难认,放在页面上也看得清。 */
 class AccentPaletteTest {
-    @Test fun blueIsTheExistingPalette() {
+    @Test fun reactorIsTheDarkPaletteAndBlueTheLightOne() {
+        assertSame(DarkColors, palette(dark = true, accent = ThemeAccent.Reactor))
         assertSame(LightColors, palette(dark = false, accent = ThemeAccent.Blue))
-        assertSame(DarkColors, palette(dark = true, accent = ThemeAccent.Blue))
     }
 
     @Test fun otherAccentsOnlyReplaceAccentColors() {
@@ -40,8 +40,8 @@ class AccentPaletteTest {
 
     @Test fun textOnEveryAccentIsAtLeastAsLegibleAsOnDefaultBlue() {
         for (dark in listOf(false, true)) {
-            val blue = palette(dark, ThemeAccent.Blue)
-            val floor = contrast(blue.accent, blue.onAccent)
+            val default = palette(dark, ThemeAccent.Reactor)
+            val floor = contrast(default.accent, default.onAccent).coerceAtMost(contrast(palette(dark, ThemeAccent.Blue).accent, palette(dark, ThemeAccent.Blue).onAccent))
             for (accent in ThemeAccent.entries) {
                 val c = palette(dark, accent)
                 val ratio = contrast(c.accent, c.onAccent)

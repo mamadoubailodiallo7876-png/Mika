@@ -14,7 +14,7 @@
     <string name="checklist_content">Isi</string>
     <string name="checklist_delete_question">Hapus daftar dan riwayatnya?</string>
     <string name="checklist_supplement">Informasi tambahan</string>
-    <string name="checklist_next">Apa yang harus Mika lakukan selanjutnya?</string>
+    <string name="checklist_next">Apa yang harus Jarvis lakukan selanjutnya?</string>
     <string name="checklist_fill_input">Isi kotak pesan</string>
     <string name="checklist_previous_title">Judul sebelumnya: %1$s</string>
     <string name="checklist_added">Ditambah atau ditulis ulang</string>

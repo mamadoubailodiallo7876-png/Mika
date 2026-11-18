@@ -14,7 +14,7 @@
     <string name="checklist_content">Content</string>
     <string name="checklist_delete_question">Delete this checklist and its history?</string>
     <string name="checklist_supplement">Additional information</string>
-    <string name="checklist_next">What should Mika do next?</string>
+    <string name="checklist_next">What should Jarvis do next?</string>
     <string name="checklist_fill_input">Fill input</string>
     <string name="checklist_previous_title">Previous title: %1$s</string>
     <string name="checklist_added">Added or rewritten</string>

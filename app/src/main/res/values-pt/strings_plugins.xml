@@ -4,7 +4,7 @@
     <string name="plugins_install">Instalar plugin</string>
     <string name="plugins_installing">Instalando…</string>
     <string name="plugins_empty">Ainda não há plugins</string>
-    <string name="plugins_empty_sub">Instale um zip de plugin para adicionar habilidades que o Mika possa ler. Um plugin não pode alterar as configurações do app nem ler seus outros dados.</string>
+    <string name="plugins_empty_sub">Instale um zip de plugin para adicionar habilidades que o Jarvis possa ler. Um plugin não pode alterar as configurações do app nem ler seus outros dados.</string>
     <string name="plugins_enabled">Ativado</string>
     <string name="plugins_disabled">Desativado</string>
     <string name="plugins_skills">Habilidades</string>
@@ -16,7 +16,7 @@
     <string name="plugins_uninstall_body">Remover este plugin e suas habilidades? As conversas e as memórias não são afetadas.</string>
     <string name="plugins_install_failed">Falha na instalação: %1$s</string>
     <string name="plugins_unsupported_in_version">Esta versão só aceita plugins que contêm habilidades.</string>
-    <string name="plugins_error_too_new">Este plugin precisa de uma versão mais recente do Mika.</string>
+    <string name="plugins_error_too_new">Este plugin precisa de uma versão mais recente do Jarvis.</string>
     <string name="plugins_error_unsafe">O pacote contém um caminho inseguro e foi rejeitado.</string>
     <string name="plugins_error_too_large">O pacote é grande demais.</string>
     <string name="plugins_error_missing_manifest">O pacote não tem manifest.json na raiz.</string>

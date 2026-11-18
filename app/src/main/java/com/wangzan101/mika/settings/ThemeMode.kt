@@ -5,6 +5,6 @@ enum class ThemeMode {
     System, Light, Dark;
 
     companion object {
-        fun parse(s: String?): ThemeMode = entries.firstOrNull { it.name == s } ?: System
+        fun parse(s: String?): ThemeMode = entries.firstOrNull { it.name == s } ?: Dark
     }
 }

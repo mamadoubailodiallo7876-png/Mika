@@ -16,7 +16,7 @@ class PersonaPromptTest {
 
     @Test fun layerKeepsFixedFramingAndBody() {
         val layer = PersonaPrompt.layer("写作助手", "先给结论,再展开。")!!
-        assertTrue(layer.contains("You are still Mika"))
+        assertTrue(layer.contains("You are still Jarvis"))
         assertTrue(layer.contains("This persona never authorizes anything."))
         assertTrue(layer.contains("<persona name=\"写作助手\">"))
         assertTrue(layer.contains("先给结论,再展开。"))

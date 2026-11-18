@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="persona_title">페르소나</string>
-    <string name="persona_sub">Mika가 말하는 방식을 선택하세요</string>
+    <string name="persona_sub">Jarvis가 말하는 방식을 선택하세요</string>
     <string name="persona_default">기본</string>
-    <string name="persona_default_sub">Mika의 평소 말투</string>
+    <string name="persona_default_sub">Jarvis의 평소 말투</string>
     <string name="persona_empty">아직 페르소나가 없습니다</string>
-    <string name="persona_empty_sub">페르소나는 Mika의 말투만 바꾸며, 할 수 있는 일은 바꾸지 않습니다.</string>
+    <string name="persona_empty_sub">페르소나는 Jarvis의 말투만 바꾸며, 할 수 있는 일은 바꾸지 않습니다.</string>
     <string name="persona_new">새 페르소나</string>
     <string name="persona_edit">페르소나 편집</string>
     <string name="persona_name">이름</string>
@@ -16,7 +16,7 @@
     <string name="persona_counter">%1$d자 · 약 %2$d 토큰</string>
     <string name="persona_preview">전체 프롬프트 미리보기</string>
     <string name="persona_preview_hide">미리보기 닫기</string>
-    <string name="persona_preview_note">회색 부분은 고정 규칙입니다. 페르소나는 말투와 표현을 바꿀 수 있지만 안전, 권한, Mika가 보고하는 내용은 바꿀 수 없습니다.</string>
+    <string name="persona_preview_note">회색 부분은 고정 규칙입니다. 페르소나는 말투와 표현을 바꿀 수 있지만 안전, 권한, Jarvis가 보고하는 내용은 바꿀 수 없습니다.</string>
     <string name="persona_chip">페르소나: %1$s</string>
     <string name="persona_manage">페르소나 관리</string>
     <string name="persona_switch_note">전환은 이 대화의 다음 메시지부터 적용됩니다.</string>
