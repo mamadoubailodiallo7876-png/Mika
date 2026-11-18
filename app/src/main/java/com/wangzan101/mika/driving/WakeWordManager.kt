@@ -1,7 +1,5 @@
 package com.wangzan101.mika.driving
 
-import ai.picovoice.porcupine.Porcupine
-import ai.picovoice.porcupine.PorcupineException
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -9,7 +7,12 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.util.Log
-import com.wangzan101.mika.BuildConfig
+import com.k2fsa.sherpa.onnx.FeatureConfig
+import com.k2fsa.sherpa.onnx.KeywordSpotter
+import com.k2fsa.sherpa.onnx.KeywordSpotterConfig
+import com.k2fsa.sherpa.onnx.OnlineModelConfig
+import com.k2fsa.sherpa.onnx.OnlineStream
+import com.k2fsa.sherpa.onnx.OnlineTransducerModelConfig
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,14 +20,15 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.io.File
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /**
- * 常驻的「Jarvis」唤醒词(Porcupine 内置关键词,不需要 .ppn 文件)。
+ * 常驻的「Jarvis」/「Hey Jarvis」唤醒词:sherpa-onnx 关键词检测(模型见 [WakeWordModel]),免费、离线、不需要 Key。
  *
- * 一条专用后台线程独占麦克风:循环读一帧、交给 Porcupine。听到后发一次 [detections],并**自己先暂停**
+ * 一条专用后台线程独占麦克风:每 100 ms 读一段 16 kHz 音频喂给检测器。听到后发一次 [detections],并**自己先暂停**
  * (释放麦克风),避免同一声被连报、也把麦克风让给后面的语音识别;调用方处理完回到 IDLE 时再 [resume]。
  * [pause] 返回时麦克风已经释放(最多等 1 秒),可以放心接着开识别。
  *
@@ -32,19 +36,19 @@ import kotlin.concurrent.withLock
  */
 class WakeWordManager(
     context: Context,
-    private val accessKey: String = BuildConfig.PORCUPINE_ACCESS_KEY,
-    private val sensitivity: Float = 0.6f,
+    /** 越大越不容易误唤醒、也越容易漏;和 [WakeWordModel.KEYWORDS] 里每个词自己的阈值一起起作用。 */
+    private val keywordsThreshold: Float = 0.25f,
 ) {
     private val context = context.applicationContext
 
     private val _detections = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    /** 每听到一次「Jarvis」发一次。 */
+    /** 每听到一次唤醒词发一次。 */
     val detections: SharedFlow<Unit> = _detections.asSharedFlow()
 
     private val _error = MutableStateFlow<String?>(null)
 
-    /** 起不来的原因(没有 AccessKey、没有录音权限、Porcupine 初始化失败);正常时为 null。 */
+    /** 起不来的原因(没有录音权限、模型还没下好、模型加载失败);正常时为 null。 */
     val error: StateFlow<String?> = _error.asStateFlow()
 
     private val lock = ReentrantLock()
@@ -56,10 +60,10 @@ class WakeWordManager(
 
     /** 启动监听线程;已经在跑就什么都不做。返回 false 表示起不来([error] 说明原因)。 */
     fun start(): Boolean {
-        if (accessKey.isBlank()) return fail("No Porcupine AccessKey: set PORCUPINE_ACCESS_KEY in local.properties")
         if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             return fail("Microphone permission not granted")
         }
+        if (!WakeWordModel.isReady(context)) return fail("Wake word model is not downloaded yet")
         lock.withLock {
             if (thread?.isAlive == true) {
                 wanted = true
@@ -73,7 +77,7 @@ class WakeWordManager(
         return true
     }
 
-    /** 停掉线程并释放 Porcupine 和麦克风。 */
+    /** 停掉线程并释放检测器和麦克风。 */
     fun stop() {
         val t = lock.withLock {
             wanted = false
@@ -107,21 +111,44 @@ class WakeWordManager(
         return false
     }
 
+    private fun buildSpotter(): KeywordSpotter? {
+        val dir = WakeWordModel.dir(context)
+        val keywords = File(dir, "jarvis_keywords.txt").also { it.writeText(WakeWordModel.KEYWORDS) }
+        val config = KeywordSpotterConfig(
+            featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = 80),
+            modelConfig = OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = File(dir, WakeWordModel.ENCODER).path,
+                    decoder = File(dir, WakeWordModel.DECODER).path,
+                    joiner = File(dir, WakeWordModel.JOINER).path,
+                ),
+                tokens = File(dir, WakeWordModel.TOKENS).path,
+                numThreads = 1,
+                provider = "cpu",
+                modelType = "zipformer2",
+            ),
+            maxActivePaths = 4,
+            keywordsFile = keywords.path,
+            keywordsScore = 1.0f,
+            keywordsThreshold = keywordsThreshold,
+            numTrailingBlanks = 1,
+        )
+        return try {
+            KeywordSpotter(config = config)
+        } catch (e: Throwable) {
+            fail("Wake word engine failed to start: ${e.message}")
+            null
+        }
+    }
+
     private fun run() {
-        var porcupine: Porcupine? = null
+        var spotter: KeywordSpotter? = null
+        var stream: OnlineStream? = null
         var recorder: AudioRecord? = null
         try {
-            porcupine = try {
-                Porcupine.Builder()
-                    .setAccessKey(accessKey)
-                    .setKeyword(Porcupine.BuiltInKeyword.JARVIS)
-                    .setSensitivity(sensitivity)
-                    .build(context)
-            } catch (e: PorcupineException) {
-                fail("Porcupine failed to start: ${e.message}")
-                return
-            }
-            val frame = ShortArray(porcupine.frameLength)
+            spotter = buildSpotter() ?: return
+            val pcm = ShortArray(FRAME)
+            val floats = FloatArray(FRAME)
             while (true) {
                 lock.withLock {
                     while (wanted && paused) {
@@ -129,22 +156,25 @@ class WakeWordManager(
                             releaseRecorder(recorder)
                             recorder = null
                         }
+                        stream?.release()
+                        stream = null
                         micOpen = false
                         changed.signalAll()
                         changed.await()
                     }
                     if (!wanted) return
                 }
-                val rec = recorder ?: openRecorder(frame.size, porcupine.sampleRate).also { recorder = it }
+                val rec = recorder ?: openRecorder().also { recorder = it }
                 if (rec == null) {
                     // 麦克风被别的 App 占着等:隔一会儿再试,不空转
                     lock.withLock { if (wanted && !paused) changed.awaitNanos(TimeUnit.SECONDS.toNanos(2)) }
                     continue
                 }
+                val s = stream ?: spotter.createStream("").also { stream = it }
                 lock.withLock { micOpen = true }
                 var filled = 0
-                while (filled < frame.size) {
-                    val n = rec.read(frame, filled, frame.size - filled)
+                while (filled < FRAME) {
+                    val n = rec.read(pcm, filled, FRAME - filled)
                     if (n < 0) {
                         // 录音器出错(被抢占、设备断开):丢掉重开
                         Log.w(TAG, "AudioRecord.read failed: $n")
@@ -155,12 +185,16 @@ class WakeWordManager(
                     }
                     filled += n
                 }
-                if (filled < frame.size) continue
-                val hit = try {
-                    porcupine.process(frame) >= 0
-                } catch (e: PorcupineException) {
-                    fail("Porcupine error: ${e.message}")
-                    return
+                if (filled < FRAME) continue
+                for (i in 0 until FRAME) floats[i] = pcm[i] / 32768f
+                s.acceptWaveform(floats, SAMPLE_RATE)
+                var hit = false
+                while (spotter.isReady(s)) {
+                    spotter.decode(s)
+                    if (spotter.getResult(s).keyword.isNotEmpty()) {
+                        hit = true
+                        spotter.reset(s)
+                    }
                 }
                 if (hit) {
                     lock.withLock { paused = true }
@@ -169,7 +203,8 @@ class WakeWordManager(
             }
         } finally {
             recorder?.let(::releaseRecorder)
-            runCatching { porcupine?.delete() }
+            runCatching { stream?.release() }
+            runCatching { spotter?.release() }
             lock.withLock {
                 micOpen = false
                 changed.signalAll()
@@ -178,13 +213,13 @@ class WakeWordManager(
     }
 
     @android.annotation.SuppressLint("MissingPermission") // start() 已检查 RECORD_AUDIO
-    private fun openRecorder(frameLength: Int, sampleRate: Int): AudioRecord? {
-        val minBytes = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+    private fun openRecorder(): AudioRecord? {
+        val minBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         if (minBytes <= 0) return null
         val rec = try {
             AudioRecord(
-                MediaRecorder.AudioSource.MIC, sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
-                maxOf(minBytes, frameLength * 2 * 4),
+                MediaRecorder.AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                maxOf(minBytes, FRAME * 2 * 4),
             )
         } catch (e: Exception) {
             Log.w(TAG, "AudioRecord init failed", e)
@@ -210,5 +245,8 @@ class WakeWordManager(
 
     private companion object {
         const val TAG = "JarvisWakeWord"
+        const val SAMPLE_RATE = 16_000
+        /** 100 ms。 */
+        const val FRAME = 1_600
     }
 }
