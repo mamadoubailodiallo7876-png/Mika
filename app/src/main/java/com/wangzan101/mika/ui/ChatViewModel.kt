@@ -192,6 +192,8 @@ data class Exchange(
     val files: List<SharedFile> = emptyList(),
     /** 这一轮 Mika 生成并留在工作区里的音频,显示成音频卡片。 */
     val audios: List<com.wangzan101.mika.core.chat.GeneratedAudio> = emptyList(),
+    /** 这一轮 Mika 生成并留在工作区里的视频,显示成视频卡片。 */
+    val videos: List<com.wangzan101.mika.core.chat.GeneratedVideo> = emptyList(),
     /** 这次打开 App 后开始跟的时刻(毫秒);不知道时为 0。 */
     val startedAt: Long = 0L,
     /** 结束时算出的用时;没结束或不知道开始时刻时为 null。 */
@@ -444,6 +446,7 @@ class ChatViewModel(
     private val sharedFiles: StateFlow<List<SharedFile>> = MutableStateFlow(emptyList()),
     /** 当前任务生成并留在工作区里的音频;任务开始时由服务清空。 */
     private val generatedAudios: StateFlow<List<com.wangzan101.mika.core.chat.GeneratedAudio>> = MutableStateFlow(emptyList()),
+    private val generatedVideos: StateFlow<List<com.wangzan101.mika.core.chat.GeneratedVideo>> = MutableStateFlow(emptyList()),
     /** 把选中的文件(内容 URI 字符串)复制进对话工作区的 inbox/。 */
     private val importAttachments: suspend (conversationId: String, uris: List<String>) -> ImportResult = { _, _ -> ImportResult(emptyList(), emptyList()) },
     /** 读出选中文件(内容 URI 字符串)的名字、大小和是不是照片;读盘的活由调用方放到后台线程。 */
@@ -492,6 +495,10 @@ class ChatViewModel(
     private val autoRead: StateFlow<Boolean> = MutableStateFlow(false),
     /** 播放工作区里的一段音频(对话编号, 路径);默认不做。 */
     private val playAudio: suspend (String, String) -> Unit = { _, _ -> },
+    /** 打开这一轮生成的视频(系统播放器);没有实现时点了没反应。 */
+    private val playVideo: suspend (String, String) -> Unit = { _, _ -> },
+    /** 取一段工作区视频的首帧当封面;取不到时为 null。 */
+    private val videoPosterLoader: suspend (String, String) -> android.graphics.Bitmap? = { _, _ -> null },
 ) {
     /** 用户在对话页上关掉留在后台的那一页。 */
     fun closeKeptPage() = closeKept()
@@ -511,6 +518,18 @@ class ChatViewModel(
     fun playAudio(path: String) {
         val id = _ui.value.conversationId ?: return
         scope.launch { playAudio(id, path) }
+    }
+
+    /** 用系统播放器打开这一轮生成的一段视频。 */
+    fun playVideo(path: String) {
+        val id = _ui.value.conversationId ?: return
+        scope.launch { playVideo(id, path) }
+    }
+
+    /** 视频卡片的封面(首帧);在 IO 上取,取不到返回 null。 */
+    suspend fun loadVideoPoster(path: String): android.graphics.Bitmap? {
+        val id = _ui.value.conversationId ?: return null
+        return videoPosterLoader(id, path)
     }
 
     /** 已经自动朗读过的那条回答;同一条不重复读。 */
@@ -747,6 +766,7 @@ class ChatViewModel(
         scope.launch { sharedFiles.collect { if (ownTask()) onSharedFiles(it) } }
         scope.launch { autoRead.collect { if (!it) autoReadKey = null } }
         scope.launch { generatedAudios.collect { if (ownTask()) onAudios(it) } }
+        scope.launch { generatedVideos.collect { if (ownTask()) onVideos(it) } }
         scope.launch { runNotes.collect { notes -> _ui.update { ui -> ui.copy(exchanges = ui.exchanges.map { withNotes(it, notes) }) } } }
         scope.launch { activities.collect { if (ownTask()) onActivities(it) } }
         scope.launch { steers.collect { if (ownTask()) onSteers(it) } }
@@ -888,6 +908,15 @@ class ChatViewModel(
         _ui.update { ui ->
             val exchanges = ui.exchanges.toMutableList()
             if (liveIndex in exchanges.indices) exchanges[liveIndex] = exchanges[liveIndex].copy(audios = audios)
+            ui.copy(exchanges = exchanges)
+        }
+    }
+
+    private fun onVideos(videos: List<com.wangzan101.mika.core.chat.GeneratedVideo>) {
+        if (liveIndex < 0) return
+        _ui.update { ui ->
+            val exchanges = ui.exchanges.toMutableList()
+            if (liveIndex in exchanges.indices) exchanges[liveIndex] = exchanges[liveIndex].copy(videos = videos)
             ui.copy(exchanges = exchanges)
         }
     }
@@ -1555,6 +1584,7 @@ class ChatViewModel(
         _ui.update { it.copy(takeoverStage = takeoverStage.value) }
         onSharedFiles(sharedFiles.value)
         onAudios(generatedAudios.value)
+        onVideos(generatedVideos.value)
         onActivities(activities.value)
         onSteers(steers.value)
         onState(shown.second)
@@ -2164,7 +2194,8 @@ class ChatViewModel(
                 val goal = it.conversationId?.let(runGoal).orEmpty()
                 val files = if (ownTask()) sharedFiles.value else emptyList()
                 val audios = if (ownTask()) generatedAudios.value else emptyList()
-                val ex = Exchange(goal, emptyList(), ExchangeStatus.Working, live = true, files = files, audios = audios, startedAt = clock())
+                val videos = if (ownTask()) generatedVideos.value else emptyList()
+                val ex = Exchange(goal, emptyList(), ExchangeStatus.Working, live = true, files = files, audios = audios, videos = videos, startedAt = clock())
                 it.copy(exchanges = it.exchanges + ex,
                     followUpMode = when {
                         it.attachments.isNotEmpty() -> FollowUpMode.Queue
@@ -2378,6 +2409,7 @@ class ChatViewModel(
             return Exchange(t.userText, emptyList(), status, live = false, runId = t.runId,
                 memoryNotes = t.memoryNotes, usedMemory = t.usedMemory, skillNotes = t.skillNotes,
                 audios = t.audios,
+                videos = t.videos,
                 keptPage = t.keptPage, keptPageClosed = t.keptPageClosed,
                 steers = t.steers.mapIndexed { i, text ->
                     SteerNote("turn-$i", text, SteerState.Joined, t.interruptedReplies.getOrNull(i)?.takeIf(String::isNotEmpty),
@@ -2476,6 +2508,7 @@ class ToolLabels(private val tools: ToolIndex, private val legacy: LegacyNames =
             "转写音频" to R.string.tool_audio_transcribe,
             "说话" to R.string.tool_speak,
             "分享视频到 App" to R.string.tool_share_video,
+            "生成视频" to R.string.tool_video_generate,
             "看视频" to R.string.tool_video_frames,
             "查看视频信息" to R.string.tool_video_info,
             "保存视频" to R.string.tool_video_save,

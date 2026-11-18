@@ -136,6 +136,14 @@ fun toolDispatcher(
     audioSpeakTool: Boolean = false,
     /** 视频看/存;为空时不装视频能力。 */
     video: com.wangzan101.mika.core.cap.video.VideoPort? = null,
+    /** 视频生成;为空时不提供 video_generate。 */
+    videoGeneration: com.wangzan101.mika.core.cap.video.VideoGenerationPort? = null,
+    /** 每任务最多生成几个视频。 */
+    videoMaxPerTask: Int = 1,
+    /** 视频生成没指定时的默认时长/画幅/清晰度(来自用户设置)。 */
+    videoDurationSec: Int = 5,
+    videoAspect: String = "16:9",
+    videoResolution: String = "720p",
     /** 音频转写;为空时不装转写能力(没配置服务商转写模型)。 */
     transcribe: com.wangzan101.mika.core.cap.transcribe.TranscribePort? = null,
     /** 以 root 跑命令(已 root 的手机上用户打开了「允许 Mika 执行 root 命令」才给);为空时 root 工具不登记。 */
@@ -190,7 +198,7 @@ fun toolDispatcher(
     ) + listOfNotNull(video?.let { port ->
         object : CapabilityProvider {
             override val id = com.wangzan101.mika.core.cap.video.VIDEO
-            override fun open(spec: RunSpec) = com.wangzan101.mika.core.cap.video.VideoCapability(port)
+            override fun open(spec: RunSpec) = com.wangzan101.mika.core.cap.video.VideoCapability(port, videoGeneration, videoMaxPerTask, videoDurationSec, videoAspect, videoResolution)
         }
     }) + listOfNotNull(transcribe?.let { port ->
         object : CapabilityProvider {

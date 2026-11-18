@@ -549,7 +549,8 @@ class TaskService : Service() {
             stopRunId?.let { id -> taskState._summarizing.update { it + id } }
             run.mcpExternalId?.let { (application as com.wangzan101.mika.MikaApp).remoteTasks.ended(it, end, run.steers.value, run.runId.value, run.sharedFiles.value) }
             run.end(end)
-            if (!run.conditionCheck) recordTurn(store, run, end, run.runId.value, run.sharedFiles.value, run.joinedSteers(), run.usedGroups, run.joinedInterrupted(), run.joinedFinished())
+            if (!run.conditionCheck) recordTurn(store, run, end, run.runId.value, run.sharedFiles.value, run.joinedSteers(), run.usedGroups, run.joinedInterrupted(), run.joinedFinished(),
+                audios = run.audios.value, videos = run.videos.value)
             // Sequential workflows must know whether the step actually completed before dispatching the next one.
             // Reuse the existing outcome judge once; unknown/partial results remain for the user to resolve.
             val workflowJudged = if (run.workflowAttemptId != null) runCatching { run.settleOutcome(end, store) }.getOrNull() else null
@@ -570,7 +571,7 @@ class TaskService : Service() {
                     run.triggerThreadId.orEmpty(), outcome)
                 if (outcome is ConditionOutcome.Error) {
                     val failure = TaskState.Failed(tr(R.string.task_check_unfinished, outcome.reason), FailKind.Environment)
-                    recordTurn(store, run, failure, run.runId.value)
+                    recordTurn(store, run, failure, run.runId.value, audios = run.audios.value, videos = run.videos.value)
                     runCatching { notifyResult(run, prepareResult(run, failure, "condition:${run.key}")) }
                         .onFailure { Log.w(TAG, "condition failure notification failed", it) }
                 }
@@ -726,7 +727,7 @@ class TaskService : Service() {
             (application as com.wangzan101.mika.MikaApp).workflowInterrupted(attempt)
         }
         run.end(TaskState.Cancelled)
-        recordTurn(ConversationStore.shared(this), run, TaskState.Cancelled, null)
+        recordTurn(ConversationStore.shared(this), run, TaskState.Cancelled, null, audios = run.audios.value, videos = run.videos.value)
         publishRuns()
         center.queued().forEachIndexed { i, q -> q.queue(i + 1) }
         drainReady(run.conversationId)
@@ -780,7 +781,9 @@ class TaskService : Service() {
     /** 任务结束时记一轮,后续消息可带上它作参考。写盘失败不影响任务结果。 */
     private fun recordTurn(store: ConversationStore, run: TaskRun, end: TaskState, runId: String?, files: List<SharedFile> = emptyList(),
         steers: List<String> = emptyList(), groups: List<String> = emptyList(), interrupted: List<String> = emptyList(),
-        finished: List<String> = emptyList()) {
+        finished: List<String> = emptyList(),
+        audios: List<com.wangzan101.mika.core.chat.GeneratedAudio> = emptyList(),
+        videos: List<com.wangzan101.mika.core.chat.GeneratedVideo> = emptyList()) {
         val goal = run.triggerCondition ?: run.goal
         val turn = when (end) {
             // 没核对过的(聊天、回答里没有可核对的值)和核实过的一样记成 succeeded;核对过却没能核实的才记 unverified
@@ -789,7 +792,8 @@ class TaskService : Service() {
             is TaskState.Failed -> Turn(goal, end.reason, "failed")
             TaskState.Cancelled -> Turn(goal, Conversation.CANCELLED_OUTCOME, "cancelled", outcomeSystemType = "task_cancelled")
             else -> return
-        }.copy(runId = runId, remoteTaskId = run.mcpExternalId, steers = steers, groups = groups, interruptedReplies = interrupted, finishedReplies = finished)
+        }.copy(runId = runId, remoteTaskId = run.mcpExternalId, steers = steers, groups = groups, interruptedReplies = interrupted, finishedReplies = finished,
+            audios = audios, videos = videos)
             // 这一轮留下了一页:记下站点(已经关了的连同原因),对话页那一轮下面据此显示
             .let { t -> keeper.recordFor(runId)?.let { (host, closed) -> t.copy(keptPage = host, keptPageClosed = closed) } ?: t }
         runCatching { store.append(run.conversationId, turn, files) }.onFailure { Log.w(TAG, "could not save conversation turn", it) }

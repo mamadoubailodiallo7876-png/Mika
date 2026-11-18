@@ -32,7 +32,7 @@ enum class Verb {
     RunCommand, RunBundledScript, PluginScript, ReadFile, WriteFile, SearchFiles, ShareFile, ViewImage, ListFolderFiles,
     ListDeviceFiles, CopyDeviceFile, SearchDeviceFiles, ListDeviceDirectoryHints, UpdateDeviceDirectoryDescription,
     AudioGenerate, AudioSave, AudioTranscribe, Speak,
-    VideoFrames, VideoInfo, VideoSave,
+    VideoFrames, VideoInfo, VideoSave, VideoGenerate,
     RootCommand,
     CallState, CallDial, CallAnswer, CallHangup, CallTakeover,
     Wait, AskUser, RequestConfirmation, HandToUser, HandleObstacle, EndNotDone,

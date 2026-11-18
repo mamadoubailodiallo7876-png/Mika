@@ -532,6 +532,7 @@ class ConversationStore(
                 keptPageClosed = field("keptPageClosed"),
                 atMs = field("atMs")?.toLongOrNull(),
                 audios = objects(o, "audios").mapNotNull(::audioOf),
+                videos = objects(o, "videos").mapNotNull(::videoOf),
                 verified = field("verified")?.toBooleanStrictOrNull(),
                 remoteTaskId = field("remoteTaskId"),
                 outcomeSystemType = field("outcomeSystemType"),
@@ -555,6 +556,18 @@ class ConversationStore(
     private fun audioOf(o: JsonObject): GeneratedAudio? {
         val path = str(o, "path") ?: return null
         return GeneratedAudio(path, str(o, "durationMs")?.toLongOrNull(), str(o, "text"), str(o, "atMs")?.toLongOrNull())
+    }
+
+    private fun videoOf(o: JsonObject): com.wangzan101.mika.core.chat.GeneratedVideo? {
+        val path = str(o, "path") ?: return null
+        return com.wangzan101.mika.core.chat.GeneratedVideo(
+            path,
+            str(o, "durationMs")?.toLongOrNull(),
+            str(o, "width")?.toIntOrNull() ?: 0,
+            str(o, "height")?.toIntOrNull() ?: 0,
+            str(o, "prompt"),
+            str(o, "atMs")?.toLongOrNull(),
+        )
     }
 
     @Synchronized
@@ -625,6 +638,13 @@ class ConversationStore(
                     buildJsonObject {
                         put("path", a.path); a.durationMs?.let { d -> put("durationMs", d) }
                         a.text?.let { t -> put("text", t) }; a.atMs?.let { t -> put("atMs", t) }
+                    }
+                }))
+                if (it.videos.isNotEmpty()) put("videos", JsonArray(it.videos.map { v ->
+                    buildJsonObject {
+                        put("path", v.path); v.durationMs?.let { d -> put("durationMs", d) }
+                        put("width", v.width); put("height", v.height)
+                        v.prompt?.let { t -> put("prompt", t) }; v.atMs?.let { t -> put("atMs", t) }
                     }
                 }))
                 if (it.skillNotes.isNotEmpty()) put("skillNotes", JsonArray(it.skillNotes.map { n ->
