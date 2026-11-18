@@ -405,6 +405,9 @@
         </receiver>
         <receiver android:name=".teach.TeachReceiver" android:exported="false" />
 
+        <!-- 工具调用批准通知上的按钮 -->
+        <receiver android:name=".approval.ToolApprovalReceiver" android:exported="false" />
+
         <!-- ===== Jarvis 驾驶模式(driving 包):唤醒词、离线朗读、免提界面、Android Auto ===== -->
         <!-- 入口、权限和开关;只有它带桌面图标,不碰 Mika 原有的界面 -->
         <activity

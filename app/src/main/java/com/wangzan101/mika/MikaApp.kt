@@ -391,6 +391,12 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
         voicePlayer.play(response.bytes, response.mime)
     }
 
+    /** 对外/危险的工具调用逐次批准(弹通知,批准 / 拒绝 / 30 分钟内不再问);onCreate 里装进核心的分发器。 */
+    val toolApproval by lazy {
+        val notifier = com.wangzan101.mika.approval.ToolApprovalNotifier(this)
+        com.wangzan101.mika.approval.ToolApprovalCoordinator(notifier::show, notifier::dismiss)
+    }
+
     /** 人工示范。onCreate 里建好；在那之前的无障碍事件不采集。 */
     lateinit var teach: TeachRuntime
         private set
@@ -500,6 +506,7 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
 
     override fun onCreate() {
         super.onCreate()
+        com.wangzan101.mika.core.tool.ToolApproval.gate = toolApproval
         // 上次进程在复制或绑定分享草稿途中退出时留下的临时文件;目录至多保留一份有效草稿。
         runCatching { sharedDrafts.cleanup() }
         scope.launch(Dispatchers.IO) {
