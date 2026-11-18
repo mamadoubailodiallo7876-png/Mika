@@ -921,6 +921,99 @@ class ProviderStore(
             thinkingTypes = listed?.thinkingTypes, readTimeoutSeconds = settings?.readTimeoutSeconds,
         )).metered(source, usage, beforeRetry = beforeRetry, beforeCall = beforeCall)
     }
+
+    /**
+     * 主动能力的调用只查它自己的每日预算:整份的硬上限(Token 上限,和跟着它算的请求次数上限,见 [ProactiveBudget.check])。
+     * 判定只用其中的一部分,那是 [com.wangzan101.mika.proactive.TriageRunner] 自己先停,不在这里。
+     */
+    @Suppress("UNUSED_PARAMETER")
+    private fun checkProactiveBudget(source: UsageSource) = ProactiveBudget.check(proactiveUsage(), proactiveLimit(), proactiveCalls())
+
+    /**
+     * 同一次调用里再发一个请求之前:这次调用已经发出的 [started] 个还没记进账本,加上再查。
+     * 不然只剩最后一次额度时,一次调用里的兼容重试会把次数上限顶过去。
+     */
+    @Suppress("UNUSED_PARAMETER")
+    private fun checkProactiveRetry(source: UsageSource, started: Int) =
+        ProactiveBudget.check(proactiveUsage(), proactiveLimit(), proactiveCalls() + started)
+
+    /** [configId] 这条配置本身(不按用途推看图标记);不存在为 null。 */
+    fun configById(configId: String): ProviderConfig? = _configs.value.firstOrNull { it.id == configId }
+
+    /** 这条配置当主模型用时的样子:看图标记按主模型的规矩推(和 [configFor] 对主模型的推法一致)。 */
+    private fun asMain(cfg: ProviderConfig): ProviderConfig {
+        val sees = ModelOptions.seesImages(cfg.capabilities.vision,
+            provider(cfg.providerId)?.visionOverrides?.get(cfg.model), usedForVision = _roles.value.resolve(ModelRole.Vision) == cfg.id)
+        return if (sees == cfg.capabilities.vision) cfg else cfg.copy(capabilities = cfg.capabilities.copy(vision = sees))
+    }
+
+    /**
+     * 按配置 id 建一个当主模型用的模型(备援链用,见 [RoleChoices.mainFallbacks]):计量、每日预算检查都和主模型同一条路,
+     * 用量记在主模型名下。配置不存在为 null。
+     */
+    fun modelForConfig(configId: String, session: ModelSession = ModelSession.fresh()): ChatModel? {
+        val raw = configById(configId) ?: return null
+        val p = provider(raw.providerId)
+        val source = UsageSource(raw.providerId, p?.name ?: raw.name, raw.model, UsagePurpose.of(ModelRole.Main))
+        val listed = listedOf(raw)
+        val settings = p?.contextSettings?.get(raw.model)
+        val adjusted = asMain(raw)
+        val configured = if (settings == null) adjusted else adjusted.copy(capabilities = adjusted.capabilities.copy(
+            contextTokens = settings.windowTokens ?: adjusted.capabilities.contextTokens,
+            compactionTriggerTokens = settings.triggerTokens,
+        ))
+        // 备援接手时带上主模型设的思考强度,但只在备援自己写明支持这个档位时才带:
+        // 不支持就不指定、用它自己的默认,不能让请求因为这个参数被拒(MK-1 B-D1)。
+        val mainEffort = _roles.value.reasoningEffort(ModelRole.Main)
+        val effort = mainEffort?.takeIf { ReasoningOptions.of(configured, listed)?.levels?.contains(it) == true }
+        return modelFactory(configured, apiKey(raw.id), listed?.endpoint, ClientSetup(
+            headers(p?.sessionHeader, session), reasoningEffort = effort, thinkingTypes = listed?.thinkingTypes,
+            readTimeoutSeconds = settings?.readTimeoutSeconds,
+        )).metered(source, usage, beforeCall = ::checkDailyBudget)
+    }
+
+    /**
+     * 按 [RoleChoices.mainFallbacks] 的顺序返回备援模型及其服务商 ID，供故障转移判断预算归属。
+     * 配置没了、建不出的位子跳过,链短一点照样能跑。
+     */
+    fun mainFallbackChain(session: ModelSession = ModelSession.fresh()): Pair<List<ChatModel>, List<String?>> {
+        val models = ArrayList<ChatModel>()
+        val providerIds = ArrayList<String>()
+        // 旧设定里若把主模型自己也排进备援,载入时略过:切给自己没有意义(MK-1 B-D2)。
+        val mainId = _roles.value.resolve(ModelRole.Main)
+        for (id in _roles.value.mainFallbacks) {
+            if (id == mainId) continue
+            val cfg = configById(id) ?: continue
+            val m = modelForConfig(id, session) ?: continue
+            models += m
+            providerIds += cfg.providerId
+        }
+        return models to providerIds
+    }
+
+    fun mainProviderId(): String? = configFor(ModelRole.Main)?.providerId
+
+    /** 每次实际请求前重查配置和账本；达到预算时不发请求，也不记一笔虚假调用。 */
+    private fun checkDailyBudget(source: UsageSource) {
+        val p = provider(source.providerId) ?: return
+        val limit = p.dailyTokenBudget ?: return
+        val used = dailyUsage(source.providerId)
+        if (used >= limit) throw ModelError.DailyBudgetExceeded(p.name, limit, used, providerId = source.providerId)
+    }
+
+    /**
+     * 声音模型:地址、Key、请求头取这家服务商;不套对话模型的计量(朗读用量由调用方另记)。
+     * 服务商、模型或协议缺失时为 null。合成比一句话慢,读超时放到 120 秒。
+     */
+    fun ttsModel(choice: VoiceChoice, capabilities: TtsCapabilities): TtsModel? {
+        val p = provider(choice.providerId) ?: return null
+        val client = modelHttp.newBuilder().readTimeout(120, TimeUnit.SECONDS).build()
+        val header = headers(p.sessionHeader, ModelSession.fresh())
+        val key = providerKey(p.id)
+        return when (choice.protocol) {
+            TtsProtocol.OpenAiSpeech -> OpenAiSpeechModel(p.baseUrl, key, choice.model, capabilities, client, header)
+            TtsProtocol.GeminiTts -> GeminiTtsModel(p.baseUrl, key.orEmpty(), choice.model, capabilities, client, header)
+        }
     }
 
     /**
