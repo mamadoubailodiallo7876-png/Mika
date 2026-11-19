@@ -181,6 +181,8 @@ fun ModelSetupScreen(
             }
             val actions = ProviderDetailActions(
                 refresh = { vm.refresh(provider.id) }, changeKey = { vm.changeKey(provider.id, it) },
+                addKey = { vm.addProviderKey(provider.id, it) },
+                removeKey = { vm.removeProviderKey(provider.id, it) },
                 remove = { vm.removeProvider(provider.id); openProvider = null; allModels = false },
                 use = { r, model -> vm.pick(r, provider.id, model) },
                 setVision = { model, sees -> vm.setModelVision(provider.id, model, sees) },
@@ -369,12 +371,8 @@ fun ModelSetupContent(ui: ModelSetupUi, onboarding: Boolean, actions: ModelSetup
                         }
                     }
                     FallbackSection(ui, ModelRole.Main, actions.pickRoleFallback)
-                    if (ui.roles.vision !is RoleChoice.Off) {
-                        FallbackSection(ui, ModelRole.Vision, actions.pickRoleFallback)
-                    }
-                    if (ui.roles.light !is RoleChoice.SameAsMain) {
-                        FallbackSection(ui, ModelRole.Light, actions.pickRoleFallback)
-                    }
+                    FallbackSection(ui, ModelRole.Vision, actions.pickRoleFallback)
+                    FallbackSection(ui, ModelRole.Light, actions.pickRoleFallback)
                 }
                 Spacer(Modifier.height(16.dp))
             }
@@ -479,9 +477,10 @@ private fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions) {
                 modifier = Modifier.testTag("setup-name"),
             )
         }
+        val keyPlaceholder = if (f.keyRequired) "Paste 1 or more keys (comma / newline separated)" else ModelSetupCopy.KEY_OPTIONAL
         InputRow(
             ModelSetupCopy.API_KEY, f.apiKey, actions.setApiKey,
-            if (f.keyRequired) ModelSetupCopy.KEY_HINT else ModelSetupCopy.KEY_OPTIONAL, first = !f.urlEditable,
+            keyPlaceholder, first = !f.urlEditable,
             keyboard = KeyboardType.Password, secret = !showKey, modifier = Modifier.testTag("setup-api-key"),
             onClear = { actions.setApiKey("") },
             clearDescription = stringResource(R.string.model_key_clear),
@@ -498,7 +497,7 @@ private fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions) {
     }
     val parsedKeys = remember(f.apiKey) { com.wangzan101.mika.core.model.KeyPoolManager.shared.parseKeys(f.apiKey) }
     if (parsedKeys.size > 1) {
-        FooterNote("✓ 已检测到 ${parsedKeys.size} 个密钥 (Key Pool 轮询备援模式)", color = MikaTheme.colors.accent)
+        FooterNote("✓ Key Pool: ${parsedKeys.size} keys active (auto-rotates on 429/timeout)", color = MikaTheme.colors.accent)
     } else {
         ApiKeyNoticeNote(f.keyNotice)
     }
@@ -684,12 +683,18 @@ private fun SpeechVoiceSection(ui: ModelSetupUi, onSpeech: (() -> Unit)?, onVoic
 private fun FallbackSection(ui: ModelSetupUi, role: ModelRole = ModelRole.Main, onPickFallback: (ModelRole, Int) -> Unit) {
     val fallbacks = ui.roles.fallbacks(role)
     val slots = minOf(fallbacks.size + 1, com.wangzan101.mika.settings.MAX_FALLBACKS)
-    GroupLabel(ModelsCopy.fallbackLabel(role, 0).substringBefore(" · "))
+    val title = when (role) {
+        ModelRole.Main -> "Main Model Waterfall"
+        ModelRole.Vision -> "Vision Model Waterfall"
+        ModelRole.Light -> "Light Model Waterfall"
+    }
+    GroupLabel(title)
     GroupCard {
         for (slot in 0 until slots) {
+            val label = if (slot < fallbacks.size) "Backup Tier ${slot + 1}" else "+ Add Backup Tier ${slot + 1}"
             RoleCard(
                 ModelsCopy.FALLBACK_ICON,
-                ModelsCopy.fallbackLabel(role, slot),
+                label,
                 ModelsCopy.fallbackLine(ui, role, slot),
                 first = slot == 0,
                 tag = "role-fallback-${role.name.lowercase()}-$slot",

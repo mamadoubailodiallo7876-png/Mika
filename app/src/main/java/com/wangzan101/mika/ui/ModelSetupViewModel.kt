@@ -3,6 +3,7 @@ package com.wangzan101.mika.ui
 import com.wangzan101.mika.R
 import com.wangzan101.mika.i18n.tr
 import com.wangzan101.mika.core.model.ApiKeyText
+import com.wangzan101.mika.core.model.KeyPoolManager
 import com.wangzan101.mika.core.model.ListFailure
 import com.wangzan101.mika.core.net.ProxyFailure
 import com.wangzan101.mika.core.model.Capabilities
@@ -208,6 +209,7 @@ data class ModelSetupUi(
     val configs: List<ProviderConfig> = emptyList(),
     val roles: RoleChoices = RoleChoices(),
     val keyed: Set<String> = emptySet(),
+    val providerKeyMap: Map<String, List<String>> = emptyMap(),
     val listing: Map<String, ListState> = emptyMap(),
     /** ChatGPT 服务商的账号;没有这家时为 null。 */
     val chatGptAccount: ChatGptAccount? = null,
@@ -398,6 +400,7 @@ class ModelSetupViewModel(
         return ui.copy(
             providers = providers, configs = store.configs.value, roles = store.roles.value,
             keyed = providers.filter { store.hasKey(it.id) }.map { it.id }.toSet(),
+            providerKeyMap = providers.associate { it.id to store.providerKeys(it.id) },
             chatGptAccount = store.chatGptProvider()?.let { p ->
                 store.chatGptSession(p.id).let { ChatGptAccount(it?.email.orEmpty(), it?.signedIn == true) }
             },
@@ -593,7 +596,8 @@ class ModelSetupViewModel(
         val accepted = ApiKeyText.accept(raw)
         if (accepted.notice == ApiKeyText.Notice.IllegalCharacters) return null
         val key = accepted.text.trim()
-        return if (ApiKeyText.isHeaderLegal(key)) key else null
+        val parsed = KeyPoolManager.shared.parseKeys(key)
+        return if (parsed.isNotEmpty() && parsed.all { ApiKeyText.isHeaderLegal(it) }) key else null
     }
 
     /** 表单上的 Key 放不进请求头:标红,停在表单上,不发请求。 */
@@ -1248,6 +1252,41 @@ class ModelSetupViewModel(
             }
             refreshJobs.remove(providerId)?.cancel()
             refresh(providerId)
+            sync()
+        }
+    }
+
+    fun addProviderKey(providerId: String, apiKey: String) {
+        val k = headerKey(apiKey) ?: return
+        if (k.isEmpty()) return
+        scope.launch {
+            try {
+                withContext(io) { store.addProviderKey(providerId, k) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(listing = it.listing + (providerId to ListState.Failed(listFailureText(e)))) }
+                return@launch
+            }
+            refreshJobs.remove(providerId)?.cancel()
+            refresh(providerId)
+            sync()
+        }
+    }
+
+    fun removeProviderKey(providerId: String, keyToRemove: String) {
+        scope.launch {
+            try {
+                withContext(io) { store.removeProviderKey(providerId, keyToRemove) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(listing = it.listing + (providerId to ListState.Failed(listFailureText(e)))) }
+                return@launch
+            }
+            refreshJobs.remove(providerId)?.cancel()
+            refresh(providerId)
+            sync()
         }
     }
 

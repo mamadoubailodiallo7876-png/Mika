@@ -409,6 +409,23 @@ class ProviderStore(
         return KeyPoolManager.shared.parseKeys(raw)
     }
 
+    /** 向服务商密钥池中追加新密钥。 */
+    @Synchronized
+    fun addProviderKey(providerId: String, newKey: String) {
+        val current = providerKeys(providerId)
+        val added = KeyPoolManager.shared.parseKeys(newKey)
+        val combined = (current + added).distinct()
+        setKey(providerId, combined.joinToString(", "))
+    }
+
+    /** 从服务商密钥池中移除指定密钥。 */
+    @Synchronized
+    fun removeProviderKey(providerId: String, keyToRemove: String) {
+        val current = providerKeys(providerId)
+        val remaining = current.filterNot { it == keyToRemove }
+        setKey(providerId, remaining.joinToString(", "))
+    }
+
     /** 服务商当前活跃可用的密钥 (优先从 KeyPool 中自动轮询、避开限流密钥)。 */
     fun activeApiKey(providerId: String): String? {
         val raw = providerKey(providerId) ?: return null
@@ -882,7 +899,7 @@ class ProviderStore(
     /** Returns a stored Gemini Developer API key (`Kind.Gemini` only). */
     @Synchronized
     fun geminiDeveloperApiKey(): String? {
-        fun validKey(providerId: String): String? = providerKey(providerId)
+        fun validKey(providerId: String): String? = activeApiKey(providerId)
             ?.trim()
             ?.takeIf { it.isNotBlank() && ApiKeyText.isHeaderLegal(it) && it.all { ch -> ch.code in 33..126 } }
         val mainCfg = configFor(ModelRole.Main)
@@ -968,7 +985,7 @@ class ProviderStore(
         val p = provider(choice.providerId) ?: return null
         val client = modelHttp.newBuilder().readTimeout(120, TimeUnit.SECONDS).build()
         val header = headers(p.sessionHeader, ModelSession.fresh())
-        val key = providerKey(p.id)
+        val key = activeApiKey(p.id) ?: providerKey(p.id)?.let { KeyPoolManager.shared.parseKeys(it).firstOrNull() }
         return when (choice.protocol) {
             TtsProtocol.OpenAiSpeech -> OpenAiSpeechModel(p.baseUrl, key, choice.model, capabilities, client, header)
             TtsProtocol.GeminiTts -> GeminiTtsModel(p.baseUrl, key.orEmpty(), choice.model, capabilities, client, header)
@@ -985,8 +1002,9 @@ class ProviderStore(
         kind: ProviderConfig.Kind, baseUrl: String, apiKey: String?, sessionHeader: String?,
         model: String, endpoint: ModelEndpoint?, caps: Capabilities,
     ): ProbeResult {
+        val probeKey = apiKey?.let { KeyPoolManager.shared.parseKeys(it).firstOrNull() ?: it }
         val cfg = ProviderConfig(PROBE_ID, kind, baseUrl, model, caps.copy(toolCalls = true))
-        val m = modelFactory(cfg, apiKey, endpoint, ClientSetup(headers(sessionHeader, ModelSession.fresh()), PROBE_MAX_TOKENS))
+        val m = modelFactory(cfg, probeKey, endpoint, ClientSetup(headers(sessionHeader, ModelSession.fresh()), PROBE_MAX_TOKENS))
         return try {
             val reply = m.complete(PROBE_SYSTEM, listOf(Message(Role.User, listOf(Part.Text(PROBE_TEXT)), Author.Mika)), listOf(PROBE_TOOL))
             if (reply.parts.any { it is Part.ToolCall }) ProbeResult.ToolCalled else ProbeResult.NoToolCall
@@ -1009,13 +1027,16 @@ class ProviderStore(
         provider(cfg.providerId)?.models?.firstOrNull { it.id == cfg.model }
 
     /** 列出这个服务商的可用模型(见 [ModelCatalog]);不属于任何对话,声明了会话头的用新的会话号。 */
-    suspend fun listModels(kind: ProviderConfig.Kind, baseUrl: String, apiKey: String?, sessionHeader: String? = null): ModelListResult =
-        modelLister(kind, baseUrl, apiKey, headers(sessionHeader, ModelSession.fresh()))
+    suspend fun listModels(kind: ProviderConfig.Kind, baseUrl: String, apiKey: String?, sessionHeader: String? = null): ModelListResult {
+        val probeKey = apiKey?.let { KeyPoolManager.shared.parseKeys(it).firstOrNull() ?: it }
+        return modelLister(kind, baseUrl, probeKey, headers(sessionHeader, ModelSession.fresh()))
+    }
 
     /** 重新列一个已连接服务商的模型:用存着的 Key;订阅登录用访问令牌(快过期先换新的)。 */
     suspend fun listModels(p: Provider): ModelListResult {
         if (p.kind != ProviderConfig.Kind.ChatGpt && p.kind != ProviderConfig.Kind.Xai) {
-            return listModels(p.kind, p.baseUrl, providerKey(p.id), p.sessionHeader)
+            val key = activeApiKey(p.id) ?: providerKey(p.id)?.let { KeyPoolManager.shared.parseKeys(it).firstOrNull() }
+            return listModels(p.kind, p.baseUrl, key, p.sessionHeader)
         }
         val token = try {
             if (p.kind == ProviderConfig.Kind.ChatGpt) tokensFor(p.id).get(fresh = false) else accountTokensFor(p.id).get(fresh = false)

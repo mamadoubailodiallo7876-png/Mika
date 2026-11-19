@@ -37,9 +37,16 @@ object ApiKeyText {
         }
         val text = kept.toString()
         val notice = when {
-            !isHeaderLegal(text) -> Notice.IllegalCharacters
-            removedInvisible -> Notice.InvisibleRemoved
-            else -> Notice.None
+            isHeaderLegal(text) -> if (removedInvisible) Notice.InvisibleRemoved else Notice.None
+            else -> {
+                // If text contains newlines, check if it's a valid key pool bundle where each key is valid
+                val parsed = KeyPoolManager.shared.parseKeys(text)
+                if (parsed.isNotEmpty() && parsed.all { isHeaderLegal(it) }) {
+                    if (removedInvisible) Notice.InvisibleRemoved else Notice.None
+                } else {
+                    Notice.IllegalCharacters
+                }
+            }
         }
         return Accepted(text, notice)
     }
