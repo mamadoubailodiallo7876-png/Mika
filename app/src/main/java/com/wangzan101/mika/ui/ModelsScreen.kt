@@ -902,13 +902,17 @@ object ModelsCopy {
     val FALLBACK_ICON: ImageVector get() = MikaIcons.Refresh
     val FALLBACK_CLEAR: String get() = tr(R.string.main_fallback_clear)
 
-    fun fallbackLabel(slot: Int) = tr(R.string.main_fallback_name, slot + 1)
+    fun fallbackLabel(role: ModelRole, slot: Int) = "${roleName(role)} ${tr(R.string.main_fallback_name, slot + 1)} · ${tr(R.string.main_fallback_what)}"
 
-    fun fallbackLine(ui: ModelSetupUi, slot: Int): RoleLine {
-        val cfg = ui.roles.mainFallbacks.getOrNull(slot)?.let { id -> ui.configs.firstOrNull { it.id == id } }
+    fun fallbackLabel(slot: Int) = fallbackLabel(ModelRole.Main, slot)
+
+    fun fallbackLine(ui: ModelSetupUi, role: ModelRole, slot: Int): RoleLine {
+        val cfg = ui.roles.fallbacks(role).getOrNull(slot)?.let { id -> ui.configs.firstOrNull { it.id == id } }
         return if (cfg != null) RoleLine(cfg.model, ui.providerOf(cfg)?.let(::providerName) ?: cfg.name, isModel = true)
         else RoleLine(UNSET, tr(R.string.main_fallback_pick), unset = true)
     }
+
+    fun fallbackLine(ui: ModelSetupUi, slot: Int): RoleLine = fallbackLine(ui, ModelRole.Main, slot)
 
     /** 第五个用途「声音模型」:朗读/主动说话,和语音转写一样不在 [ModelRole] 里。 */
     val VOICE_LABEL: String get() = "${tr(R.string.role_voice)} · ${tr(R.string.role_voice_what)}"

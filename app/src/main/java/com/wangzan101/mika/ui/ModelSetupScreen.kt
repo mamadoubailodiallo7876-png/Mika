@@ -125,7 +125,8 @@ fun ModelSetupScreen(
     }
     val ui by vm.state.collectAsState()
     var picking by rememberSaveable { mutableStateOf<ModelRole?>(null) }
-    var pickingFallback by rememberSaveable { mutableStateOf<Int?>(null) }
+    var pickingFallbackRole by rememberSaveable { mutableStateOf<ModelRole?>(null) }
+    var pickingFallbackSlot by rememberSaveable { mutableStateOf<Int?>(null) }
     var openProvider by rememberSaveable { mutableStateOf<String?>(null) }
     var allModels by rememberSaveable { mutableStateOf(false) }
     var openDecision by rememberSaveable { mutableStateOf(false) }
@@ -138,7 +139,8 @@ fun ModelSetupScreen(
         val id = ui.signedInProvider ?: return@LaunchedEffect
         signInSheet = null
         picking = null
-        pickingFallback = null
+        pickingFallbackRole = null
+        pickingFallbackSlot = null
         openProvider = id
         allModels = false
         showProviders = false
@@ -156,7 +158,9 @@ fun ModelSetupScreen(
         setModel = vm::setModel, setManual = vm::setManual, setName = vm::setName,
         testAndSave = vm::testAndSave, saveUntested = vm::saveWithoutTest,
         openForm = vm::openForm, closeForm = vm::closeForm,
-        openProvider = { openProvider = it; allModels = false; showProviders = false }, pickRole = { picking = it }, pickFallback = { pickingFallback = it },
+        openProvider = { openProvider = it; allModels = false; showProviders = false }, pickRole = { picking = it },
+        pickFallback = { pickingFallbackRole = ModelRole.Main; pickingFallbackSlot = it },
+        pickRoleFallback = { r, s -> pickingFallbackRole = r; pickingFallbackSlot = s },
         openProviders = { showProviders = true },
         next = onDone, openSpeech = onOpenSpeech, openVoice = onOpenVoice, openUsage = onOpenUsage,
         openDecision = { openDecision = true }, openSignIn = { signInSheet = it },
@@ -203,35 +207,34 @@ fun ModelSetupScreen(
                 ProviderDetailContent(ui, provider, actions, onBack = { openProvider = null })
             }
         }
-        pickingFallback != null -> {
-            val slot = pickingFallback!!
-            BackHandler { pickingFallback = null }
-            LaunchedEffect(slot) { vm.ensureListed(); vm.clearManualPick() }
+        pickingFallbackSlot != null -> {
+            val role = pickingFallbackRole ?: ModelRole.Main
+            val slot = pickingFallbackSlot!!
+            BackHandler { pickingFallbackSlot = null; pickingFallbackRole = null }
+            LaunchedEffect(role, slot) { vm.ensureListed(); vm.clearManualPick() }
             RolePickerContent(
-                ui, ModelRole.Main,
+                ui, role,
                 RolePickerActions(
                     pick = { pid, model ->
-                        // 和选主模型一样:没试通过的那家先试调用,通了才选上、返回
-                        if (ui.probeBeforePick(ModelRole.Main, pid)) vm.pickFallbackManual(slot, pid, model) { pickingFallback = null }
-                        else { vm.pickFallback(slot, pid, model); pickingFallback = null }
+                        if (ui.probeBeforePick(role, pid)) vm.pickFallbackManual(role, slot, pid, model) { pickingFallbackSlot = null; pickingFallbackRole = null }
+                        else { vm.pickFallback(role, slot, pid, model); pickingFallbackSlot = null; pickingFallbackRole = null }
                     },
-                    pickManual = { pid, model -> vm.pickFallbackManual(slot, pid, model) { pickingFallback = null } },
-                    addProvider = { vm.openForm(); pickingFallback = null },
+                    pickManual = { pid, model -> vm.pickFallbackManual(role, slot, pid, model) { pickingFallbackSlot = null; pickingFallbackRole = null } },
+                    addProvider = { vm.openForm(); pickingFallbackSlot = null; pickingFallbackRole = null },
                 ),
-                onBack = { pickingFallback = null },
-                titleOverride = stringResource(R.string.main_fallback_name, slot + 1),
-                hintOverride = "",
+                onBack = { pickingFallbackSlot = null; pickingFallbackRole = null },
+                titleOverride = ModelsCopy.fallbackLabel(role, slot),
+                hintOverride = stringResource(R.string.main_fallback_hint),
                 pickedOverride = { pid, model ->
-                    ui.roles.mainFallbacks.getOrNull(slot)?.let { id -> ui.configs.firstOrNull { it.id == id } }
+                    ui.roles.fallbacks(role).getOrNull(slot)?.let { id -> ui.configs.firstOrNull { it.id == id } }
                         ?.let { it.providerId == pid && it.model == model } == true
                 },
-                // 主模型自己不列在备援选单里:选它当备援没有意义(MK-1 B-D2)。
                 exclude = { pid, model ->
-                    val mainCfg = ui.configs.firstOrNull { it.id == ui.roles.resolve(ModelRole.Main) }
-                    mainCfg != null && mainCfg.providerId == pid && mainCfg.model == model
+                    val primaryCfg = ui.configs.firstOrNull { it.id == ui.roles.resolve(role) }
+                    primaryCfg != null && primaryCfg.providerId == pid && primaryCfg.model == model
                 },
-                clearAction = { vm.clearFallback(slot); pickingFallback = null },
-                clearSelected = ui.roles.mainFallbacks.getOrNull(slot) == null,
+                clearAction = { vm.clearFallback(role, slot); pickingFallbackSlot = null; pickingFallbackRole = null },
+                clearSelected = ui.roles.fallbacks(role).getOrNull(slot) == null,
             )
         }
         role != null -> {
@@ -300,6 +303,7 @@ class ModelSetupActions(
     val openProvider: (String) -> Unit = {},
     val pickRole: (ModelRole) -> Unit = {},
     val pickFallback: (Int) -> Unit = {},
+    val pickRoleFallback: (ModelRole, Int) -> Unit = { _, _ -> },
     /** 打开「服务商」页(已连接的服务商 + 添加表单)。 */
     val openProviders: () -> Unit = {},
     /** 打开「语音转文字」的选择页;为 null 时不显示这张卡(上手流程)。 */
@@ -364,7 +368,13 @@ fun ModelSetupContent(ui: ModelSetupUi, onboarding: Boolean, actions: ModelSetup
                                 first = true, onClick = openDecision) { RowChevron() }
                         }
                     }
-                    FallbackSection(ui, actions.pickFallback)
+                    FallbackSection(ui, ModelRole.Main, actions.pickRoleFallback)
+                    if (ui.roles.vision !is RoleChoice.Off) {
+                        FallbackSection(ui, ModelRole.Vision, actions.pickRoleFallback)
+                    }
+                    if (ui.roles.light !is RoleChoice.SameAsMain) {
+                        FallbackSection(ui, ModelRole.Light, actions.pickRoleFallback)
+                    }
                 }
                 Spacer(Modifier.height(16.dp))
             }
@@ -486,7 +496,12 @@ private fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions) {
             )
         }
     }
-    ApiKeyNoticeNote(f.keyNotice)
+    val parsedKeys = remember(f.apiKey) { com.wangzan101.mika.core.model.KeyPoolManager.shared.parseKeys(f.apiKey) }
+    if (parsedKeys.size > 1) {
+        FooterNote("✓ 已检测到 ${parsedKeys.size} 个密钥 (Key Pool 轮询备援模式)", color = MikaTheme.colors.accent)
+    } else {
+        ApiKeyNoticeNote(f.keyNotice)
+    }
     // 列表里没有要的模型、或这家不提供列表时,随时可以自己填(没列出模型时那一栏已经在了)
     if (!f.noList) {
         Text(
@@ -664,13 +679,22 @@ private fun SpeechVoiceSection(ui: ModelSetupUi, onSpeech: (() -> Unit)?, onVoic
     }
 }
 
-/** 备用模型:主模型不能用时按顺序接手。 */
+/** 备用模型:对应用途主选模型不能用时按顺序接手。 */
 @Composable
-private fun FallbackSection(ui: ModelSetupUi, onPickFallback: (Int) -> Unit) {
+private fun FallbackSection(ui: ModelSetupUi, role: ModelRole = ModelRole.Main, onPickFallback: (ModelRole, Int) -> Unit) {
+    val fallbacks = ui.roles.fallbacks(role)
+    val slots = minOf(fallbacks.size + 1, com.wangzan101.mika.settings.MAX_FALLBACKS)
+    GroupLabel(ModelsCopy.fallbackLabel(role, 0).substringBefore(" · "))
     GroupCard {
-        for (slot in 0 until MAX_MAIN_FALLBACKS) {
-            RoleCard(ModelsCopy.FALLBACK_ICON, ModelsCopy.fallbackLabel(slot), ModelsCopy.fallbackLine(ui, slot), first = slot == 0, tag = "role-fallback-$slot") {
-                onPickFallback(slot)
+        for (slot in 0 until slots) {
+            RoleCard(
+                ModelsCopy.FALLBACK_ICON,
+                ModelsCopy.fallbackLabel(role, slot),
+                ModelsCopy.fallbackLine(ui, role, slot),
+                first = slot == 0,
+                tag = "role-fallback-${role.name.lowercase()}-$slot",
+            ) {
+                onPickFallback(role, slot)
             }
         }
     }
