@@ -91,6 +91,7 @@ import com.wangzan101.mika.ui.components.TagTone
 import com.wangzan101.mika.ui.components.TileTone
 import com.wangzan101.mika.ui.components.TopBar
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.settings.MAX_MAIN_FALLBACKS
@@ -334,10 +335,13 @@ fun ModelSetupContent(ui: ModelSetupUi, onboarding: Boolean, actions: ModelSetup
     val focus = LocalFocusManager.current
     LaunchedEffect(ui.showForm) { if (!ui.showForm) focus.clearFocus() }
     val onPick: (ModelRole) -> Unit = { role -> if (ui.providers.isEmpty()) actions.openForm() else actions.pickRole(role) }
+    val scrollState = rememberSaveable(saver = androidx.compose.foundation.ScrollState.Saver) {
+        androidx.compose.foundation.ScrollState(initial = 0)
+    }
     PageBackground {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars).windowInsetsPadding(WindowInsets.ime)) {
             TopBar(if (onboarding) ModelSetupCopy.TITLE else ModelsCopy.TITLE, MikaIcons.Back, onBack, stringResource(R.string.back))
-            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+            Column(Modifier.weight(1f).verticalScroll(scrollState).padding(horizontal = 16.dp)) {
                 if (onboarding) {
                     Text(
                         ModelSetupCopy.LEAD, Modifier.padding(top = 4.dp, bottom = 12.dp),
@@ -350,10 +354,17 @@ fun ModelSetupContent(ui: ModelSetupUi, onboarding: Boolean, actions: ModelSetup
                     RolesSection(ui, onPick, actions.setReasoningEffort, actions.setModelContext)
                     FooterNote(ModelSetupCopy.ONBOARDING_NOTE)
                 } else {
-                    // 服务商:一行入口,点进去是单独的服务商页
+                    // Providers entry — show count + total key count in subtitle
+                    val totalKeys = ui.providers.sumOf { p ->
+                        ui.providerKeyMap[p.id]?.size ?: 0
+                    }
+                    val providerSubtitle = when {
+                        ui.providers.isEmpty() -> "No providers connected"
+                        totalKeys > 1 -> "${ui.providers.size} providers · $totalKeys keys in pool"
+                        else -> "${ui.providers.size} provider${if (ui.providers.size > 1) "s" else ""}"
+                    }
                     GroupCard {
-                        ListRow(MikaIcons.Key, ModelsCopy.PROVIDERS, first = true, onClick = actions.openProviders) {
-                            if (ui.providers.isNotEmpty()) RowValue(trPlural(R.plurals.models_providers_count, ui.providers.size))
+                        ListRow(MikaIcons.Key, ModelsCopy.PROVIDERS, providerSubtitle, first = true, onClick = actions.openProviders) {
                             RowChevron()
                         }
                     }
@@ -430,8 +441,14 @@ private fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions) {
     val f = ui.form
     var showKey by remember { mutableStateOf(false) }
     var confirmUntested by remember { mutableStateOf(false) }
+    // Header row: title + cancel
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        GroupLabel(ModelsCopy.ADD_PROVIDER, Modifier.weight(1f))
+        Text(
+            "Connect a Provider",
+            Modifier.weight(1f).padding(top = 16.dp, bottom = 8.dp),
+            style = MikaType.Body, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            fontSize = 15.sp, color = c.ink,
+        )
         if (ui.providers.isNotEmpty()) {
             Text(
                 ModelSetupCopy.CANCEL, Modifier.clickable(onClick = actions.closeForm).padding(horizontal = 4.dp, vertical = 6.dp),
@@ -439,14 +456,15 @@ private fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions) {
             )
         }
     }
+    // Sign-in options (ChatGPT, xAI, OpenRouter)
     AccountSignInGroup(ui, actions.openSignIn, actions.openProvider)
-    GroupLabel(ModelsCopy.KEY_GROUP)
+    // Provider preset chips
+    Text("Choose a provider", Modifier.padding(top = 4.dp, bottom = 6.dp), style = MikaType.Caption, color = c.ink3)
     FlowRow(
         Modifier.fillMaxWidth().padding(bottom = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         ProviderPresets.all.forEach { p ->
-            // 「自定义」按界面语言显示;服务商的名字原样
             SelectChip(if (p == ProviderPresets.custom) stringResource(R.string.preset_custom) else p.label, f.preset == p.label, { actions.selectPreset(p.label) }, Modifier.testTag("preset-${p.label}"))
         }
     }
@@ -477,16 +495,87 @@ private fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions) {
                 modifier = Modifier.testTag("setup-name"),
             )
         }
-        val keyPlaceholder = if (f.keyRequired) "Paste 1 or more keys (comma / newline separated)" else ModelSetupCopy.KEY_OPTIONAL
-        InputRow(
-            ModelSetupCopy.API_KEY, f.apiKey, actions.setApiKey,
-            keyPlaceholder, first = !f.urlEditable,
-            keyboard = KeyboardType.Password, secret = !showKey, modifier = Modifier.testTag("setup-api-key"),
-            onClear = { actions.setApiKey("") },
-            clearDescription = stringResource(R.string.model_key_clear),
-            clearModifier = Modifier.testTag("setup-api-key-clear"),
+        // ── API Key input — multi-line, large, prominent ──────────────────
+        val parsedKeys = remember(f.apiKey) { com.wangzan101.mika.core.model.KeyPoolManager.shared.parseKeys(f.apiKey) }
+        val poolActive = parsedKeys.size > 1
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = if (!f.urlEditable) 0.dp else 0.dp, bottom = 2.dp)
         ) {
-            Text(if (showKey) stringResource(R.string.hide) else stringResource(R.string.show), Modifier.clickable { showKey = !showKey }, style = MikaType.Caption, color = c.accent)
+            if (!f.urlEditable) Hairline(start = 0.dp)
+            Row(
+                Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    ModelSetupCopy.API_KEY,
+                    style = MikaType.Body, color = c.ink,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    if (showKey) stringResource(R.string.hide) else stringResource(R.string.show),
+                    Modifier.clickable { showKey = !showKey }.padding(start = 8.dp),
+                    fontSize = 13.sp, color = c.accent,
+                )
+            }
+            // Large text area for single or multi-key paste
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .background(c.fill, MikaShapes.Button)
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
+            ) {
+                if (f.apiKey.isEmpty()) {
+                    Text(
+                        if (f.keyRequired) "Paste your API key here\n(Separate multiple keys with commas or new lines for auto-rotation)"
+                        else ModelSetupCopy.KEY_OPTIONAL,
+                        style = MikaType.Body, color = c.ink3, lineHeight = 20.sp,
+                    )
+                }
+                androidx.compose.foundation.text.BasicTextField(
+                    value = f.apiKey,
+                    onValueChange = { raw ->
+                        val accepted = com.wangzan101.mika.core.model.ApiKeyText.accept(raw)
+                        actions.setApiKey(accepted.text)
+                    },
+                    modifier = Modifier.fillMaxWidth().testTag("setup-api-key"),
+                    minLines = 2,
+                    maxLines = 5,
+                    textStyle = MikaType.Body.copy(
+                        color = c.ink,
+                        fontFamily = if (!showKey) null else androidx.compose.ui.text.font.FontFamily.Monospace,
+                    ),
+                    cursorBrush = androidx.compose.ui.graphics.SolidColor(c.accent),
+                    visualTransformation = if (showKey) androidx.compose.ui.text.input.VisualTransformation.None
+                                           else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                )
+            }
+            // Live pool feedback
+            when {
+                poolActive -> Text(
+                    "${parsedKeys.size} keys detected — pool will auto-rotate on rate-limit or timeout",
+                    Modifier.padding(top = 6.dp).testTag("setup-key-notice"),
+                    style = MikaType.Caption, color = c.ok,
+                )
+                f.keyNotice == com.wangzan101.mika.core.model.ApiKeyText.Notice.IllegalCharacters -> Text(
+                    ModelSetupCopy.KEY_ILLEGAL,
+                    Modifier.padding(top = 6.dp).testTag("setup-key-notice-illegal"),
+                    style = MikaType.Caption, color = c.bad,
+                )
+                f.keyNotice == com.wangzan101.mika.core.model.ApiKeyText.Notice.InvisibleRemoved -> Text(
+                    ModelSetupCopy.KEY_INVISIBLE_REMOVED,
+                    Modifier.padding(top = 6.dp).testTag("setup-key-notice"),
+                    style = MikaType.Caption, color = c.ink2,
+                )
+                f.apiKey.isNotBlank() -> Text(
+                    "1 key ready",
+                    Modifier.padding(top = 6.dp),
+                    style = MikaType.Caption, color = c.ok,
+                )
+            }
+            Spacer(Modifier.height(10.dp))
         }
         if (f.showModel) {
             InputRow(
@@ -494,12 +583,6 @@ private fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions) {
                 keyboard = KeyboardType.Uri, modifier = Modifier.testTag("setup-model"),
             )
         }
-    }
-    val parsedKeys = remember(f.apiKey) { com.wangzan101.mika.core.model.KeyPoolManager.shared.parseKeys(f.apiKey) }
-    if (parsedKeys.size > 1) {
-        FooterNote("✓ Key Pool: ${parsedKeys.size} keys active (auto-rotates on 429/timeout)", color = MikaTheme.colors.accent)
-    } else {
-        ApiKeyNoticeNote(f.keyNotice)
     }
     // 列表里没有要的模型、或这家不提供列表时,随时可以自己填(没列出模型时那一栏已经在了)
     if (!f.noList) {
@@ -678,20 +761,25 @@ private fun SpeechVoiceSection(ui: ModelSetupUi, onSpeech: (() -> Unit)?, onVoic
     }
 }
 
-/** 备用模型:对应用途主选模型不能用时按顺序接手。 */
+/** Backup models for a role: seamless failover if the primary model hits limits or goes down. */
 @Composable
 private fun FallbackSection(ui: ModelSetupUi, role: ModelRole = ModelRole.Main, onPickFallback: (ModelRole, Int) -> Unit) {
     val fallbacks = ui.roles.fallbacks(role)
     val slots = minOf(fallbacks.size + 1, com.wangzan101.mika.settings.MAX_FALLBACKS)
-    val title = when (role) {
-        ModelRole.Main -> "Main Model Waterfall"
-        ModelRole.Vision -> "Vision Model Waterfall"
-        ModelRole.Light -> "Light Model Waterfall"
+    val roleLabel = when (role) {
+        ModelRole.Main   -> "Main"
+        ModelRole.Vision -> "Vision"
+        ModelRole.Light  -> "Light"
     }
-    GroupLabel(title)
+    val hasAny = fallbacks.isNotEmpty()
+    GroupLabel(
+        if (hasAny) "$roleLabel Model Backups  ·  ${fallbacks.size} active"
+        else "$roleLabel Model Backups"
+    )
     GroupCard {
         for (slot in 0 until slots) {
-            val label = if (slot < fallbacks.size) "Backup Tier ${slot + 1}" else "+ Add Backup Tier ${slot + 1}"
+            val isFilled = slot < fallbacks.size
+            val label = if (isFilled) "Backup Model ${slot + 1}" else "+ Add Backup Model"
             RoleCard(
                 ModelsCopy.FALLBACK_ICON,
                 label,
@@ -702,6 +790,9 @@ private fun FallbackSection(ui: ModelSetupUi, role: ModelRole = ModelRole.Main, 
                 onPickFallback(role, slot)
             }
         }
+    }
+    if (hasAny) {
+        FooterNote("If your primary $roleLabel model hits rate limits or is unavailable, Mika switches to your backup models automatically so tasks never get interrupted.")
     }
 }
 

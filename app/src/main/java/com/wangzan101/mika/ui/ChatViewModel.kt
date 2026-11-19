@@ -125,9 +125,62 @@ data class StepAction(val label: String, val target: String?, val effect: String
  * 执行过程里的一行,来自实际做过的事(运行事件里的活动):[title] 是做了什么(读取类合并成「看了微信的聊天列表」),
  * [reason] 是模型给那一步写的用意(没写时为空),[subtitle] 是没成功时的说明,平时为空。
  */
+/**
+ * When models produce step notes/reasons containing Chinese (e.g. 点击“发送消息”按钮以查找联系人 Ved。),
+ * normalize and translate them to clean English so the step list and live indicator remain 100% English.
+ */
+internal fun translateStepReason(text: String): String {
+    if (text.isEmpty() || !text.any { it in '\u4e00'..'\u9fa5' }) return text
+    val res = text.replace("点击“", "Tap \"")
+        .replace("点击\"", "Tap \"")
+        .replace("以查找联系人", " to find contact ")
+        .replace("以查找", " to find ")
+        .replace("以搜索", " to search ")
+        .replace("以打开", " to open ")
+        .replace("以确认", " to confirm ")
+        .replace("”按钮", "\" button ")
+        .replace("\"按钮", "\" button ")
+        .replace("按钮", " button ")
+        .replace("发送消息", "Send message")
+        .replace("在搜索框输入“", "Type \"")
+        .replace("在搜索框输入\"", "Type \"")
+        .replace("在搜索框输入", "Type in search box: ")
+        .replace("搜索框", "search box ")
+        .replace("搜索按钮", "search button ")
+        .replace("输入框", "input field ")
+        .replace("点击搜索", "Tap search ")
+        .replace("点击", "Tap ")
+        .replace("输入“", "Type \"")
+        .replace("输入\"", "Type \"")
+        .replace("输入", "Type ")
+        .replace("查看", "View ")
+        .replace("打开", "Open ")
+        .replace("滑动", "Swipe ")
+        .replace("返回", "Back ")
+        .replace("查找联系人", " to find contact ")
+        .replace("查找", " to find ")
+        .replace("搜索", "Search ")
+        .replace("联系人", "contact ")
+        .replace("发送", "Send ")
+        .replace("确定", "Confirm ")
+        .replace("取消", "Cancel ")
+        .replace("稍候", "Please wait")
+        .replace("等待", "Wait ")
+        .replace("“", "\"")
+        .replace("”", "\"")
+        .replace(Regex("""。$"""), "")
+        .replace(Regex("""\s+"""), " ")
+        .trim()
+    return if (res.isNotEmpty() && res[0].isLowerCase()) {
+        res.replaceFirstChar { it.uppercase() }
+    } else {
+        res
+    }
+}
+
 data class StepRow(val step: Int, val title: String, val subtitle: String, val state: StepState, val reason: String = "") {
     /** 这一步在界面上的说法:模型自己的话,没有时用工具的说法。 */
-    val text: String get() = reason.ifEmpty { title }
+    val text: String get() = translateStepReason(reason).ifEmpty { title }
 }
 
 sealed interface ExchangeStatus {
@@ -2286,7 +2339,7 @@ class ChatViewModel(
                 val goals = (s.progress as? RunProgress.Task)?.goals
                 val progress = s.progress?.takeIf { goals == null }?.let(StatusCopy::progress)
                 // 「在做什么」先用模型随调用写的话,没有再用调用里的用意
-                val said = (s.narration ?: s.reason)?.takeIf(String::isNotBlank)
+                val said = (s.narration ?: s.reason)?.takeIf(String::isNotBlank)?.let(::translateStepReason)
                 val waiting = progress == null && s.tool == null && said == null
                 ex.copy(
                     status = ExchangeStatus.Working, waitingForModel = waiting, draft = s.preview, goals = goals ?: ex.goals,
