@@ -168,10 +168,6 @@ fun ModelSetupScreen(
         setReasoningEffort = vm::setReasoningEffort, setModelContext = vm::setModelContext,
     )
     when {
-        showProviders -> {
-            BackHandler { showProviders = false }
-            Page(ModelsCopy.PROVIDERS, onBack = { showProviders = false }) { ProvidersSection(ui, actions) }
-        }
         openDecision -> JevSettingsScreen(remember { DecisionSettings.get(context) }, onBack = { openDecision = false })
         provider != null -> {
             LaunchedEffect(provider.id) { vm.ensureListed() }
@@ -209,6 +205,10 @@ fun ModelSetupScreen(
                 BackHandler { openProvider = null }
                 ProviderDetailContent(ui, provider, actions, onBack = { openProvider = null })
             }
+        }
+        showProviders -> {
+            BackHandler { showProviders = false }
+            Page(ModelsCopy.PROVIDERS, onBack = { showProviders = false }) { ProvidersSection(ui, actions) }
         }
         pickingFallbackSlot != null -> {
             val role = pickingFallbackRole ?: ModelRole.Main

@@ -1220,16 +1220,28 @@ class ProviderStore(
             ?: defaultHttp
         return when (kind) {
             ProviderConfig.Kind.OpenAiCompat ->
-                OpenAiCompatModel(baseUrl, apiKey, cfg.model, cfg.capabilities, http, endpoint?.reasoningField, setup.headers,
-                    reasoningEffort = setup.reasoningEffort)
+                OpenAiCompatModel(
+                    baseUrl, apiKey, cfg.model, cfg.capabilities, http, endpoint?.reasoningField, setup.headers,
+                    reasoningEffort = setup.reasoningEffort,
+                    keySupplier = { activeApiKey(cfg.providerId) },
+                    onRateLimit = { key, retryMs ->
+                        KeyPoolManager.shared.markRateLimited(cfg.providerId, key, retryMs)
+                    }
+                )
             ProviderConfig.Kind.Anthropic -> AnthropicModel(
                 baseUrl, apiKey.orEmpty(), cfg.model, cfg.capabilities, http,
                 maxTokens = setup.maxOutputTokens,
                 headers = setup.headers, reasoningEffort = setup.reasoningEffort, thinkingTypes = setup.thinkingTypes,
             )
             ProviderConfig.Kind.Gemini ->
-                GeminiModel(baseUrl, apiKey.orEmpty(), cfg.model, cfg.capabilities, http, setup.headers, setup.maxOutputTokens,
-                    reasoningEffort = setup.reasoningEffort)
+                GeminiModel(
+                    baseUrl, apiKey.orEmpty(), cfg.model, cfg.capabilities, http, setup.headers, setup.maxOutputTokens,
+                    reasoningEffort = setup.reasoningEffort,
+                    keySupplier = { activeApiKey(cfg.providerId) },
+                    onRateLimit = { key, retryMs ->
+                        KeyPoolManager.shared.markRateLimited(cfg.providerId, key, retryMs)
+                    }
+                )
             ProviderConfig.Kind.OpenAiResponses ->
                 ResponsesModel(baseUrl, BearerToken.fixed(apiKey), cfg.model, cfg.capabilities, http, headers = setup.headers,
                     reasoningEffort = setup.reasoningEffort)

@@ -596,6 +596,7 @@ class ModelSetupViewModel(
         val accepted = ApiKeyText.accept(raw)
         if (accepted.notice == ApiKeyText.Notice.IllegalCharacters) return null
         val key = accepted.text.trim()
+        if (key.isEmpty()) return ""
         val parsed = KeyPoolManager.shared.parseKeys(key)
         return if (parsed.isNotEmpty() && parsed.all { ApiKeyText.isHeaderLegal(it) }) key else null
     }
