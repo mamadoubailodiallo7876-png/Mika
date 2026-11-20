@@ -527,7 +527,7 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
             projectStore = projects,
             projectDeletionImpact = projectDeleter::impact,
             removeProject = { pid ->
-                conversations.list(includeArchived = true).filter { it.projectId == pid }.forEach { followUpQueue.dropConversation(it.id) }
+                projectDeleter.memberConversationIds(pid).forEach(followUpQueue::dropConversation)
                 projectDeleter.delete(pid)
             },
             workspaceResolver = workspaceResolver,
