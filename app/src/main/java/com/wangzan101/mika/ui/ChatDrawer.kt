@@ -202,7 +202,6 @@ private const val MAX_RECENT = 50
  */
 @Composable
 fun ChatDrawer(
-    onPlugins: () -> Unit = {},
     check: Prerequisites.Check,
     sections: DrawerSections,
     canSwitch: Boolean,
@@ -210,6 +209,7 @@ fun ChatDrawer(
     onPlans: () -> Unit,
     onMemory: () -> Unit,
     onBrowser: () -> Unit,
+    onPlugins: () -> Unit = {},
     onScreens: () -> Unit = {},
     onSettings: () -> Unit,
     onOpen: (DrawerConversation) -> Unit,
