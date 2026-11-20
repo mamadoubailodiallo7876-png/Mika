@@ -1,4 +1,5 @@
 package com.wangzan101.mika.ui
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.webkit.WebChromeClient
@@ -20,11 +21,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -42,7 +47,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaTheme
 import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
+
 private data class CreatorPluginItem(
     val id: String,
     val title: String,
@@ -51,10 +58,11 @@ private data class CreatorPluginItem(
     val indexFile: File,
     val dir: File,
 )
-private fun ensureStarterPlugins(baseDir: File) {
+
+private fun ensureStarterPlugins(baseDir: File, force: Boolean = false) {
     if (!baseDir.exists()) baseDir.mkdirs()
     val regFile = File(baseDir, "registry.json")
-    if (regFile.exists()) return
+    if (regFile.exists() && !force) return
     val starters = listOf(
         Triple("chronometre", "Chronomètre & Focus" to "⏱️", """<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{box-sizing:border-box;font-family:system-ui,sans-serif}body{margin:0;background:#0f172a;color:#f8fafc;padding:20px;display:flex;justify-content:center}.c{width:100%;max-width:420px;background:#1e293b;border-radius:18px;padding:22px;text-align:center}.t{font-size:54px;font-weight:800;margin:16px 0;color:#38bdf8}.r{display:flex;gap:10px;justify-content:center}button{border:none;border-radius:12px;padding:12px 16px;font-weight:600;font-size:14px}.s{background:#10b981;color:#fff}.p{background:#f59e0b;color:#0f172a}.x{background:#334155;color:#fff}.h{margin-top:16px;text-align:left;font-size:13px}.i{background:#0f172a;padding:8px 12px;border-radius:10px;margin-top:6px;display:flex;justify-content:space-between}</style></head><body><div class="c"><h2>⏱️ Chronomètre & Focus</h2><div class="t" id="d">00:00</div><div class="r"><button class="s" id="b" onclick="tog()">Démarrer</button><button class="p" onclick="sav()">Sauver</button><button class="x" onclick="rst()">Reset</button></div><div class="h" id="h"></div></div><script>let s=0,t=null;const f=x=>String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0');function ren(){d.textContent=f(s);const l=JSON.parse(localStorage.getItem('mc_h')||'[]');h.innerHTML=l.map(x=>'<div class="i"><span>'+x.a+'</span><strong>'+x.d+'</strong></div>').join('')}function tog(){if(t){clearInterval(t);t=null;b.textContent='Reprendre'}else{t=setInterval(()=>{s++;d.textContent=f(s)},1000);b.textContent='Pause'}}function rst(){clearInterval(t);t=null;s=0;b.textContent='Démarrer';ren()}function sav(){if(!s)return;const l=JSON.parse(localStorage.getItem('mc_h')||'[]');l.unshift({d:f(s),a:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});localStorage.setItem('mc_h',JSON.stringify(l.slice(0,10)));rst()}ren();</script></body></html>"""),
         Triple("kanban", "Mon Espace Kanban" to "📋", """<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{box-sizing:border-box;font-family:system-ui,sans-serif}body{margin:0;background:#0f172a;color:#f8fafc;padding:16px}.top{display:flex;gap:8px;margin-bottom:14px}input{flex:1;background:#1e293b;border:1px solid #334155;color:#fff;padding:10px;border-radius:10px}button{background:#6366f1;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:600}.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.col{background:#1e293b;border-radius:14px;padding:12px}.task{background:#0f172a;border-radius:10px;padding:10px;margin-top:8px;font-size:13px}.act{display:flex;gap:6px;margin-top:6px}.act button{padding:4px 8px;font-size:11px;background:#334155}</style></head><body><div class="top"><input id="i" placeholder="Nouvelle tâche..."><button onclick="add()">Ajouter</button></div><div class="cols" id="c"></div><script>const ST=[{k:'todo',l:'💡 Idées'},{k:'doing',l:'⚡ En cours'},{k:'done',l:'✅ Terminé'}];const ld=()=>JSON.parse(localStorage.getItem('mk_k')||'[]');const sv=d=>{localStorage.setItem('mk_k',JSON.stringify(d));ren()};function add(){const v=i.value.trim();if(!v)return;const d=ld();d.unshift({id:Date.now(),t:v,s:'todo'});i.value='';sv(d)}function mv(id,s){sv(ld().map(x=>x.id===id?{...x,s}:x))}function dl(id){sv(ld().filter(x=>x.id!==id))}function ren(){const d=ld();c.innerHTML=ST.map(st=>'<div class="col"><strong>'+st.l+'</strong>'+d.filter(x=>x.s===st.k).map(x=>'<div class="task"><div>'+x.t.replace(/</g,'&lt;')+'</div><div class="act">'+ST.filter(o=>o.k!==st.k).map(o=>'<button onclick="mv('+x.id+',\''+o.k+'\')">'+o.l.split(' ')[0]+'</button>').join('')+'<button onclick="dl('+x.id+')" style="background:#7f1d1d">✕</button></div></div>').join('')+'</div>').join('')}ren();</script></body></html>"""),
@@ -65,7 +73,7 @@ private fun ensureStarterPlugins(baseDir: File) {
         val dir = File(baseDir, id)
         dir.mkdirs()
         File(dir, "index.html").writeText(html)
-        val obj = org.json.JSONObject()
+        val obj = JSONObject()
         obj.put("id", id)
         obj.put("title", meta.first)
         obj.put("description", "Plugin interactif intégré")
@@ -74,6 +82,32 @@ private fun ensureStarterPlugins(baseDir: File) {
     }
     regFile.writeText(arr.toString(2))
 }
+
+private fun saveManualPlugin(context: Context, title: String, icon: String, description: String, html: String) {
+    val baseDir = File(context.filesDir, "creator_plugins")
+    if (!baseDir.exists()) baseDir.mkdirs()
+    val slug = title.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-').ifEmpty { "plugin-${System.currentTimeMillis()}" }
+    val pDir = File(baseDir, slug)
+    pDir.mkdirs()
+    File(pDir, "index.html").writeText(html)
+
+    val regFile = File(baseDir, "registry.json")
+    val arr = if (regFile.isFile) runCatching { JSONArray(regFile.readText()) }.getOrElse { JSONArray() } else JSONArray()
+    val newArr = JSONArray()
+    val obj = JSONObject().apply {
+        put("id", slug)
+        put("title", title.trim())
+        put("description", description.trim().ifEmpty { "Plugin personnalisé" })
+        put("icon", icon.trim().ifEmpty { "🧩" })
+    }
+    newArr.put(obj)
+    for (i in 0 until arr.length()) {
+        val item = arr.optJSONObject(i) ?: continue
+        if (item.optString("id") != slug) newArr.put(item)
+    }
+    regFile.writeText(newArr.toString(2))
+}
+
 private fun scanPlugins(context: Context): List<CreatorPluginItem> {
     val globalDir = File(context.filesDir, "creator_plugins")
     ensureStarterPlugins(globalDir)
@@ -111,14 +145,102 @@ private fun scanPlugins(context: Context): List<CreatorPluginItem> {
     }
     return byId.values.toList()
 }
+
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun CreatorPluginsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val c = MikaTheme.colors
     var activePlugin by remember { mutableStateOf<CreatorPluginItem?>(null) }
+    var pendingDelete by remember { mutableStateOf<CreatorPluginItem?>(null) }
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var newTitle by remember { mutableStateOf("") }
+    var newIcon by remember { mutableStateOf("🧩") }
+    var newDesc by remember { mutableStateOf("") }
+    var newHtml by remember { mutableStateOf("<!DOCTYPE html>\n<html lang=\"fr\">\n<body style=\"background:#0f172a;color:#fff;font-family:sans-serif;padding:20px\">\n  <h2>Mon Plugin</h2>\n  <p>Contenu interactif...</p>\n</body>\n</html>") }
     var refreshTick by remember { mutableIntStateOf(0) }
     val plugins = remember(refreshTick) { scanPlugins(context) }
+
+    pendingDelete?.let { target ->
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = { Text("Supprimer ce plugin ?") },
+            text = { Text("Voulez-vous vraiment supprimer « ${target.icon} ${target.title} » ? Cette action est définitive.") },
+            confirmButton = {
+                Button(onClick = {
+                    target.dir.deleteRecursively()
+                    pendingDelete = null
+                    refreshTick++
+                }) {
+                    Text("Supprimer")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDelete = null }) {
+                    Text("Annuler")
+                }
+            }
+        )
+    }
+
+    if (showCreateDialog) {
+        AlertDialog(
+            onDismissRequest = { showCreateDialog = false },
+            title = { Text("Créer un plugin") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = newTitle,
+                        onValueChange = { newTitle = it },
+                        label = { Text("Nom du plugin") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = newIcon,
+                        onValueChange = { newIcon = it },
+                        label = { Text("Icône (emoji)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = newDesc,
+                        onValueChange = { newDesc = it },
+                        label = { Text("Description") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = newHtml,
+                        onValueChange = { newHtml = it },
+                        label = { Text("Code HTML / CSS / JS") },
+                        minLines = 5,
+                        maxLines = 8,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    enabled = newTitle.isNotBlank() && newHtml.isNotBlank(),
+                    onClick = {
+                        saveManualPlugin(context, newTitle, newIcon, newDesc, newHtml)
+                        newTitle = ""
+                        newDesc = ""
+                        showCreateDialog = false
+                        refreshTick++
+                    }
+                ) {
+                    Text("Créer")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCreateDialog = false }) {
+                    Text("Annuler")
+                }
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -145,8 +267,13 @@ fun CreatorPluginsScreen(onBack: () -> Unit) {
                 )
             }
             if (activePlugin == null) {
-                IconButton(onClick = { refreshTick++ }) {
-                    Icon(MikaIcons.Refresh, contentDescription = "Rafraîchir", tint = c.ink)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(onClick = { showCreateDialog = true }) {
+                        Text("+ Nouveau", fontSize = 12.sp)
+                    }
+                    IconButton(onClick = { refreshTick++ }) {
+                        Icon(MikaIcons.Refresh, contentDescription = "Rafraîchir", tint = c.ink)
+                    }
                 }
             }
         }
@@ -184,11 +311,33 @@ fun CreatorPluginsScreen(onBack: () -> Unit) {
             ) {
                 item {
                     Text(
-                        text = "Demande à Mika dans le chat « Crée-moi un plugin... » : il apparaîtra ici automatiquement.",
+                        text = "Demande à Mika dans le chat « Crée-moi un plugin... » ou appuie sur + Nouveau pour en créer un manuellement.",
                         color = c.ink2,
                         fontSize = 13.sp,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
+                }
+                if (plugins.isEmpty()) {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("Aucun plugin installé.", color = c.ink2, fontSize = 14.sp)
+                            Button(onClick = { showCreateDialog = true }) {
+                                Text("+ Créer un plugin manuellement")
+                            }
+                            OutlinedButton(onClick = {
+                                ensureStarterPlugins(File(context.filesDir, "creator_plugins"), force = true)
+                                refreshTick++
+                            }) {
+                                Text("Restaurer les plugins de base")
+                            }
+                        }
+                    }
                 }
                 items(plugins, key = { it.id }) { item ->
                     Surface(
@@ -226,10 +375,7 @@ fun CreatorPluginsScreen(onBack: () -> Unit) {
                                 Button(onClick = { activePlugin = item }) {
                                     Text("Ouvrir", fontSize = 12.sp)
                                 }
-                                IconButton(onClick = {
-                                    item.dir.deleteRecursively()
-                                    refreshTick++
-                                }) {
+                                IconButton(onClick = { pendingDelete = item }) {
                                     Icon(MikaIcons.Trash, contentDescription = "Supprimer", tint = c.ink2)
                                 }
                             }
