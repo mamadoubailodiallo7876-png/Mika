@@ -22,6 +22,7 @@ import java.util.Locale
  */
 enum class AppLanguage(val tag: String?, val speechTag: String?) {
     System(null, null),
+    French("fr", "fr-FR"),
     SimplifiedChinese("zh-Hans", "zh-CN"),
     TraditionalChinese("zh-Hant", "zh-TW"),
     Arabic("ar", "ar-MA"),
@@ -72,7 +73,7 @@ enum class AppLanguage(val tag: String?, val speechTag: String?) {
             val l = Locale.forLanguageTag(tag)
             val code = modernCode(l.language)
             if (code == "zh") return if (l.script.ifEmpty { likelyScript(tag) } == "Hant") TraditionalChinese else SimplifiedChinese
-            return entries.firstOrNull { it.tag != null && it.language == code } ?: English
+            return entries.firstOrNull { it.tag != null && it.language == code } ?:French
         }
 
         /** 安卓上 java.util.Locale 仍给几种语言用旧代码(印尼语是 in、希伯来语是 iw…),统一成现行代码再比。 */
