@@ -851,15 +851,15 @@ private fun TeachShelf(onTeach: () -> Unit) {
  */
 @Composable
 private fun FooterLinks(actions: CardActions, primary: Pair<String, () -> Unit>?) {
-    Column(
-        Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 2.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(1.dp),
+    Row(
+        Modifier.fillMaxWidth().padding(top = 6.dp),
+        horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
     ) {
         primary?.let { (text, onClick) ->
-            TextLink(text, color = MikaTheme.colors.accent, onClick = onClick)
+            TextLink(text, onClick = onClick)
+            Text("·", style = Sub, color = MikaTheme.colors.ink3)
         }
-        TextLink(CardCopy.HIDE_CAPSULE, color = MikaTheme.colors.ink3, onClick = actions::hideCapsule)
+        TextLink(CardCopy.HIDE_CAPSULE, MikaTheme.colors.ink3, actions::hideCapsule)
     }
 }
 
@@ -1047,15 +1047,8 @@ private fun Action(text: String, kind: ButtonKind, onClick: () -> Unit) {
 @Composable
 private fun TextLink(text: String, color: Color = MikaTheme.colors.accent, onClick: () -> Unit) {
     Text(
-        text = text,
-        modifier = Modifier
-            .clip(MikaShapes.Pill)
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 3.dp),
-        style = Sub.copy(fontSize = 12.5.sp),
-        color = color,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        text, Modifier.clip(MikaShapes.Pill).clickable(role = Role.Button, onClick = onClick).padding(horizontal = 6.dp, vertical = 8.dp),
+        style = Sub.copy(fontSize = 13.sp), color = color,
     )
 }
 

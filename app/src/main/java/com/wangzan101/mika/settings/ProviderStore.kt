@@ -178,9 +178,9 @@ data class Provider(
 /** OkHttp 把超时换算为 Int 毫秒，秒数必须在换算后仍能存下。 */
 internal val MODEL_READ_TIMEOUT_SECONDS = 1..(Int.MAX_VALUE / 1_000)
 
-/** 各用途备援链最长几位。扩展至 10 位，保障长链备援。 */
-internal const val MAX_MAIN_FALLBACKS = 10
-internal const val MAX_FALLBACKS = 10
+/** 各用途备援链最长几位。主模型 2、看图/轻量各最多 2，保持界面简洁。 */
+internal const val MAX_MAIN_FALLBACKS = 2
+internal const val MAX_FALLBACKS = 2
 
 /** 留空的窗口沿用所选模型配置，留空的触发点交给核心自动计算，留空的读超时用全局默认(120 秒)。 */
 data class ModelContextSettings(val windowTokens: Int? = null, val triggerTokens: Int? = null, val readTimeoutSeconds: Int? = null) {
