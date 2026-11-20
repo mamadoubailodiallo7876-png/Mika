@@ -17,6 +17,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Place French strings.xml
         run: mkdir -p app/src/main/res/values-fr && mv app/src/main/res/strings.xml app/src/main/res/values-fr/strings.xml
+      - name: Enforce French only
+        run: python3 tools/french_only.py
       - name: Test and build side-by-side debug APK
         run: ./gradlew :app:assembleDebug -PdevInstall --stacktrace
       - uses: actions/upload-artifact@v4
