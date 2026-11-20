@@ -899,7 +899,7 @@ class ProviderStore(
     /** Returns a stored Gemini Developer API key (`Kind.Gemini` only). */
     @Synchronized
     fun geminiDeveloperApiKey(): String? {
-        fun validKey(providerId: String): String? = activeApiKey(providerId)
+        fun validKey(providerId: String): String? = providerKey(providerId)
             ?.trim()
             ?.takeIf { it.isNotBlank() && ApiKeyText.isHeaderLegal(it) && it.all { ch -> ch.code in 33..126 } }
         val mainCfg = configFor(ModelRole.Main)
