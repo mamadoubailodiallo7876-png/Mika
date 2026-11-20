@@ -42,6 +42,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -60,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaTheme
+import kotlinx.coroutines.delay
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -154,10 +156,34 @@ private fun ensureStarterPlugins(baseDir: File, force: Boolean = false) {
     regFile.writeText(arr.toString(2))
 }
 
-private fun savePlugin(context: Context, existing: CreatorPluginItem?, title: String, icon: String, description: String, html: String) {
+private fun deletePluginEverywhere(context: Context, id: String) {
+    PluginWebPool.stop(id)
+    val dirs = mutableListOf(File(context.filesDir, "creator_plugins"))
+    File(context.filesDir, "sandbox/work").listFiles()?.forEach { conv ->
+        val pDir = File(conv, "plugins")
+        if (pDir.isDirectory) dirs.add(pDir)
+    }
+    for (base in dirs) {
+        File(base, id).deleteRecursively()
+        val regFile = File(base, "registry.json")
+        if (regFile.isFile) {
+            runCatching {
+                val arr = JSONArray(regFile.readText())
+                val next = JSONArray()
+                for (i in 0 until arr.length()) {
+                    val o = arr.optJSONObject(i) ?: continue
+                    if (o.optString("id") != id) next.put(o)
+                }
+                regFile.writeText(next.toString(2))
+            }
+        }
+    }
+}
+
+private fun savePlugin(context: Context, existing: CreatorPluginItem?, title: String, icon: String, description: String, html: String, forcedId: String? = null) {
     val baseDir = existing?.dir?.parentFile ?: File(context.filesDir, "creator_plugins")
     if (!baseDir.exists()) baseDir.mkdirs()
-    val slug = existing?.id ?: title.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-').ifEmpty { "plugin-${System.currentTimeMillis()}" }
+    val slug = forcedId?.takeIf { it.isNotBlank() } ?: existing?.id ?: title.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-').ifEmpty { "plugin-${System.currentTimeMillis()}" }
     val pDir = existing?.dir ?: File(baseDir, slug)
     pDir.mkdirs()
     File(pDir, "index.html").writeText(html)
@@ -218,6 +244,87 @@ private fun scanPlugins(context: Context): List<CreatorPluginItem> {
     return byId.values.toList()
 }
 
+private fun syncPluginsAndProcessAiCommands(context: Context): Boolean {
+    var changed = false
+    val workRoot = File(context.filesDir, "sandbox/work")
+    val listBefore = scanPlugins(context)
+
+    workRoot.listFiles()?.forEach { conv ->
+        val pDir = File(conv, "plugins")
+        val cmdFile = File(pDir, ".cmd.json")
+        if (cmdFile.isFile) {
+            runCatching {
+                val cmd = JSONObject(cmdFile.readText())
+                val action = cmd.optString("action")
+                val id = cmd.optString("id")
+                when (action) {
+                    "start" -> {
+                        val target = listBefore.find { it.id == id }
+                        if (target != null) {
+                            PluginWebPool.getOrCreate(context, target)
+                            changed = true
+                        }
+                    }
+                    "stop" -> {
+                        if (id.isNotBlank()) {
+                            PluginWebPool.stop(id)
+                            changed = true
+                        }
+                    }
+                    "delete" -> {
+                        if (id.isNotBlank()) {
+                            deletePluginEverywhere(context, id)
+                            changed = true
+                        }
+                    }
+                    "save" -> {
+                        val title = cmd.optString("title", id)
+                        val icon = cmd.optString("icon", "🧩")
+                        val desc = cmd.optString("description", "Plugin personnalisé")
+                        val html = cmd.optString("html", "")
+                        if (html.isNotBlank()) {
+                            val existing = listBefore.find { it.id == id }
+                            savePlugin(context, existing, title, icon, desc, html, forcedId = id)
+                            changed = true
+                        }
+                    }
+                }
+            }
+            cmdFile.delete()
+        }
+    }
+
+    val listAfter = scanPlugins(context)
+    val allArr = JSONArray()
+    for (p in listAfter) {
+        allArr.put(JSONObject().apply {
+            put("id", p.id)
+            put("title", p.title)
+            put("description", p.description)
+            put("icon", p.icon)
+            put("running", PluginWebPool.active.containsKey(p.id))
+        })
+    }
+    workRoot.listFiles()?.forEach { conv ->
+        if (conv.isDirectory) {
+            val pDir = File(conv, "plugins")
+            if (!pDir.exists()) pDir.mkdirs()
+            runCatching {
+                File(pDir, "all_plugins.json").writeText(allArr.toString(2))
+                for (p in listAfter) {
+                    val mirrorDir = File(pDir, p.id)
+                    if (!mirrorDir.exists()) mirrorDir.mkdirs()
+                    val mirrorHtml = File(mirrorDir, "index.html")
+                    if (!mirrorHtml.exists()) {
+                        p.indexFile.copyTo(mirrorHtml, overwrite = false)
+                    }
+                }
+            }
+        }
+    }
+    return changed
+}
+
 @Composable
 fun CreatorPluginsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
@@ -234,6 +341,15 @@ fun CreatorPluginsScreen(onBack: () -> Unit) {
     var refreshTick by remember { mutableIntStateOf(0) }
     val plugins = remember(refreshTick) { scanPlugins(context) }
 
+    LaunchedEffect(Unit) {
+        while (true) {
+            if (syncPluginsAndProcessAiCommands(context)) {
+                refreshTick++
+            }
+            delay(1500)
+        }
+    }
+
     val defaultTemplate = "<!DOCTYPE html>\n<html lang=\"fr\">\n<body style=\"background:#0f172a;color:#fff;font-family:sans-serif;padding:20px\">\n  <h2>Mon Plugin</h2>\n  <p>Contenu interactif...</p>\n</body>\n</html>"
 
     pendingDelete?.let { target ->
@@ -243,8 +359,7 @@ fun CreatorPluginsScreen(onBack: () -> Unit) {
             text = { Text("Voulez-vous vraiment supprimer « ${target.icon} ${target.title} » ? Cette action est définitive.") },
             confirmButton = {
                 Button(onClick = {
-                    PluginWebPool.stop(target.id)
-                    target.dir.deleteRecursively()
+                    deletePluginEverywhere(context, target.id)
                     pendingDelete = null
                     refreshTick++
                 }) {
