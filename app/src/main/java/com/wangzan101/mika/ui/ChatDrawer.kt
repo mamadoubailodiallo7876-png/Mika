@@ -202,6 +202,7 @@ private const val MAX_RECENT = 50
  */
 @Composable
 fun ChatDrawer(
+    onPlugins: () -> Unit = {},
     check: Prerequisites.Check,
     sections: DrawerSections,
     canSwitch: Boolean,
@@ -246,7 +247,8 @@ fun ChatDrawer(
             NavEntry(MikaIcons.New, stringResource(R.string.chat_new), enabled = canSwitch, onClick = onNew)
             NavEntry(MikaIcons.Clock, stringResource(R.string.drawer_plans), onClick = onPlans)
             NavEntry(MikaIcons.Heart, stringResource(R.string.memory_and_skills), onClick = onMemory)
-            NavEntry(MikaIcons.Globe, stringResource(R.string.drawer_browser), onClick = onBrowser)
+            NavEntry(MikaIcons.Globe, stringResource(R.string.drawer_browser), onClick = onBrowser) 
+            NavEntry(MikaIcons.Spark, "Plugins", onClick = onPlugins)
             // 和上面几项隔开一点:这是把 Mika 整个停下来,不是换一页
             Box(Modifier.padding(top = 4.dp)) {
                 NavEntry(MikaIcons.Power, stringResource(R.string.quit_title), onClick = onQuit)
@@ -493,6 +495,7 @@ fun ChatWithDrawer(
     onPlans: () -> Unit,
     onMemory: () -> Unit,
     onBrowser: () -> Unit,
+    onPlugins: () -> Unit = {},
     onScreens: () -> Unit = {},
     onSettings: () -> Unit,
     onAbout: () -> Unit = {},
@@ -593,7 +596,8 @@ fun ChatWithDrawer(
                     onPlans = { leave(onPlans) },
                     onMemory = { leave(onMemory) },
                     onSettings = { leave(onSettings) },
-                    onBrowser = { leave(onBrowser) },
+                    onPlugins = { leave(onPlugins) },
+                onBrowser = { leave(onBrowser) },
                     onScreens = { leave(onScreens) },
                     onAbout = { leave(onAbout) },
                     onQuit = { leave { confirmingQuit = true } },
