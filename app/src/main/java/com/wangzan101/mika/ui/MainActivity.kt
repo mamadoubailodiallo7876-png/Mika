@@ -367,6 +367,7 @@ private fun MikaRoot(
     } 
     val appContext = LocalContext.current
     LaunchedEffect(Unit) {
+       registerAndroidPluginPort(appContext)
         while (true) {
             syncPluginsAndProcessAiCommands(appContext)
             if (PluginLaunchBus.pendingOpenId != null && nav.current != Route.CreatorPlugins) {
