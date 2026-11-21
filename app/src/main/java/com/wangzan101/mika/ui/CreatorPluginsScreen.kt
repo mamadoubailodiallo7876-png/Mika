@@ -90,6 +90,8 @@ private data class CreatorPluginItem(
 )
 object PluginLaunchBus {
     var pendingOpenId by mutableStateOf<String?>(null)
+    var activeScreenPluginId by mutableStateOf<String?>(null)
+    var pendingClose by mutableStateOf(false)
 }
 
 private object PluginWebPool {
@@ -361,6 +363,61 @@ fun syncPluginsAndProcessAiCommands(context: Context): Boolean {
                             changed = true
                         }
                     }
+                "start_bg" -> {
+                    val query = cmd.optString("id", cmd.optString("title", "")).trim()
+                    if (query.isNotBlank()) {
+                        val found = scanPlugins(context).firstOrNull {
+                            it.id.equals(query, ignoreCase = true) ||
+                            it.title.equals(query, ignoreCase = true) ||
+                            it.title.contains(query, ignoreCase = true)
+                        }
+                        if (found != null) {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                PluginWebPool.getOrCreate(context, found)
+                            }
+                            changed = true
+                        }
+                    }
+                }
+                "close" -> {
+                    PluginLaunchBus.pendingClose = true
+                    changed = true
+                }
+                "eval" -> {
+                    val js = cmd.optString("js", "")
+                    val query = cmd.optString("id", cmd.optString("title", "")).trim()
+                    if (query.isNotBlank() && js.isNotBlank()) {
+                        val found = scanPlugins(context).firstOrNull {
+                            it.id.equals(query, ignoreCase = true) ||
+                            it.title.equals(query, ignoreCase = true) ||
+                            it.title.contains(query, ignoreCase = true)
+                        }
+                        if (found != null) {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                val wv = PluginWebPool.getOrCreate(context, found)
+                                wv.evaluateJavascript(js) { res ->
+                                    val payload = JSONObject().apply {
+                                        put("id", found.id)
+                                        put("title", found.title)
+                                        put("ok", true)
+                                        put("result", res ?: "null")
+                                        put("timestamp", System.currentTimeMillis())
+                                    }.toString()
+                                    workRoot.listFiles()?.forEach { convDir ->
+                                        if (convDir.isDirectory) {
+                                            val outDir = File(convDir, "plugins")
+                                            if (!outDir.exists()) outDir.mkdirs()
+                                            runCatching {
+                                                File(outDir, ".eval_result.json").writeText(payload)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            changed = true
+                        }
+                    }
+                }
                 }
             }
             cmdFile.delete()
@@ -375,7 +432,9 @@ fun syncPluginsAndProcessAiCommands(context: Context): Boolean {
             put("title", p.title)
             put("description", p.description)
             put("icon", p.icon)
-            put("running", PluginWebPool.active.containsKey(p.id))
+            put("running", PluginWebPool.active.containsKey(p.id
+            put("is_open", PluginLaunchBus.activeScreenPluginId == p.id)
+            put("size_kb", (p.indexFile.length() / 1024L).toInt())))
         })
     }
     workRoot.listFiles()?.forEach { conv ->
@@ -403,6 +462,8 @@ fun CreatorPluginsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val c = MikaTheme.colors
     var activePlugin by remember { mutableStateOf<CreatorPluginItem?>(null) }
+    LaunchedEffect(activePlugin) { PluginLaunchBus.activeScreenPluginId = activePlugin?.id }
+    LaunchedEffect(PluginLaunchBus.pendingClose) { if (PluginLaunchBus.pendingClose) { activePlugin = null; PluginLaunchBus.pendingClose = false; onBack() } }
     var pendingDelete by remember { mutableStateOf<CreatorPluginItem?>(null) }
     var editingPlugin by remember { mutableStateOf<CreatorPluginItem?>(null) }
     var showEditorDialog by remember { mutableStateOf(false) }
