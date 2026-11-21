@@ -6,6 +6,18 @@ import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.net.Uri
+import android.os.Environment
+import android.provider.OpenableColumns
+import android.util.Base64
+import android.webkit.JavascriptInterface
+import android.webkit.JsResult
+import android.webkit.PermissionRequest
+import android.webkit.ValueCallback
+import android.webkit.WebSettings
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -78,16 +90,31 @@ private data class CreatorPluginItem(
 private object PluginWebPool {
     val active = mutableStateMapOf<String, WebView>()
 
+    var fileChooserTrigger: ((ValueCallback<Array<Uri>>) -> Unit)? = null
     @SuppressLint("SetJavaScriptEnabled")
     fun getOrCreate(context: Context, item: CreatorPluginItem): WebView {
         val existing = active[item.id]
         if (existing != null) {
             (existing.parent as? ViewGroup)?.removeView(existing)
             existing.onResume()
+existing.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+existing.setBackgroundColor(android.graphics.Color.parseColor("#050811"))
+existing.settings.useWideViewPort = true
+existing.settings.loadWithOverviewMode = true
+existing.settings.databaseEnabled = true
+existing.settings.mediaPlaybackRequiresUserGesture = false
+existing.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             return existing
         }
         val wv = WebView(context.applicationContext).apply {
             settings.javaScriptEnabled = true
+layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+setBackgroundColor(android.graphics.Color.parseColor("#050811"))
+settings.useWideViewPort = true
+settings.loadWithOverviewMode = true
+settings.databaseEnabled = true
+settings.mediaPlaybackRequiresUserGesture = false
+settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             settings.domStorageEnabled = true
             settings.allowFileAccess = true
             settings.allowContentAccess = true
@@ -96,7 +123,34 @@ private object PluginWebPool {
             @Suppress("DEPRECATION")
             settings.allowUniversalAccessFromFileURLs = true
             webViewClient = WebViewClient()
-            webChromeClient = WebChromeClient()
+            webChromeClient = object : WebChromeClient() {
+override fun onShowFileChooser(
+webView: WebView?,
+filePathCallback: ValueCallback<Array<Uri>>?,
+fileChooserParams: FileChooserParams?
+): Boolean {
+if (filePathCallback == null) return false
+val trigger = fileChooserTrigger
+if (trigger != null) {
+trigger(filePathCallback)
+return true
+}
+filePathCallback.onReceiveValue(null)
+return false
+}
+override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
+Toast.makeText(context.applicationContext, message ?: "", Toast.LENGTH_SHORT).show()
+result?.confirm()
+return true
+}
+override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
+result?.confirm()
+return true
+}
+override fun onPermissionRequest(request: PermissionRequest?) {
+request?.grant(request.resources)
+}
+            }
             loadUrl("file://${item.indexFile.absolutePath}")
         }
         active[item.id] = wv
@@ -338,6 +392,45 @@ fun CreatorPluginsScreen(onBack: () -> Unit) {
     var newIcon by remember { mutableStateOf("🧩") }
     var newDesc by remember { mutableStateOf("") }
     var newHtml by remember { mutableStateOf("") }
+var importedFileName by remember { mutableStateOf<String?>(null) }
+val htmlFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+if (uri != null) {
+runCatching {
+val content = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
+if (content.isNotEmpty()) {
+newHtml = content
+val titleMatch = Regex("<title>(.*?)</title>", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)).find(content)
+if (newTitle.isBlank() && titleMatch != null) {
+newTitle = titleMatch.groupValues[1].trim()
+}
+var displayName = uri.lastPathSegment ?: "plugin.html"
+context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+if (cursor.moveToFirst()) {
+val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+if (idx >= 0) displayName = cursor.getString(idx) ?: displayName
+}
+}
+importedFileName = displayName
+showEditorDialog = true
+}
+}
+}
+}
+var pendingWebFileCallback by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
+val webInnerFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris: List<Uri> ->
+pendingWebFileCallback?.onReceiveValue(if (uris.isNotEmpty()) uris.toTypedArray() else null)
+pendingWebFileCallback = null
+}
+DisposableEffect(Unit) {
+PluginWebPool.fileChooserTrigger = { callback ->
+pendingWebFileCallback?.onReceiveValue(null)
+pendingWebFileCallback = callback
+webInnerFilePicker.launch(arrayOf("*/*"))
+}
+onDispose {
+PluginWebPool.fileChooserTrigger = null
+}
+}
     var refreshTick by remember { mutableIntStateOf(0) }
     val plugins = remember(refreshTick) { scanPlugins(context) }
 
@@ -401,7 +494,21 @@ fun CreatorPluginsScreen(onBack: () -> Unit) {
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    OutlinedTextField(
+                    
+OutlinedButton(
+onClick = { htmlFilePicker.launch(arrayOf("text/html", "*/*")) },
+modifier = Modifier.fillMaxWidth()
+) {
+Text(if (importedFileName != null) "Importer .html ($importedFileName)" else "Importer .html")
+}
+if (newHtml.length > 12_000) {
+Text(
+text = "Fichier HTML chargé : ${newHtml.length / 1024} Ko · prêt à enregistrer sans coupure",
+style = MaterialTheme.typography.bodySmall,
+color = MaterialTheme.colorScheme.primary
+)
+} else  {
+OutlinedTextField(
                         value = newHtml,
                         onValueChange = { newHtml = it },
                         label = { Text("Code HTML / CSS / JS") },
@@ -409,6 +516,7 @@ fun CreatorPluginsScreen(onBack: () -> Unit) {
                         maxLines = 8,
                         modifier = Modifier.fillMaxWidth()
                     )
+                }
                 }
             },
             confirmButton = {
@@ -470,7 +578,20 @@ fun CreatorPluginsScreen(onBack: () -> Unit) {
                 }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedButton(onClick = {
+                    
+OutlinedButton(onClick = {
+editingPlugin = null
+newTitle = ""
+newIcon = "⚡"
+newDesc = ""
+newHtml = ""
+importedFileName = null
+htmlFilePicker.launch(arrayOf("text/html", "*/*"))
+}) {
+Text("Importer .html", fontSize = 12.sp)
+}
+Spacer(Modifier.width(8.dp))
+OutlinedButton(onClick = {
                         editingPlugin = null
                         newTitle = ""
                         newIcon = "🧩"
