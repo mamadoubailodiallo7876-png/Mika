@@ -580,12 +580,22 @@ class ProviderStore(
 
     fun modelFor(role: ModelRole, session: ModelSession = ModelSession.fresh()): ChatModel? {
         val primary = configFor(role) ?: return null
-        val others = _configs.value.filter { it.id != primary.id }
-        if (others.isEmpty()) return buildSingleModel(primary, role, session)
-        val candidates = (listOf(primary) + others).map { cfg ->
-            cfg.id to buildSingleModel(cfg, role, session)
+       val baseConfigs = listOf(primary) + _configs.value.filter { it.id != primary.id }
+val allConfigs = baseConfigs.toMutableList()
+val seen = baseConfigs.map { it.providerId to it.model }.toMutableSet()
+val ignored = listOf("whisper", "tts", "guard", "prompt-guard", "embed", "audio")
+for (c in baseConfigs.distinctBy { it.providerId }) {
+    val p = provider(c.providerId) ?: continue
+    for (m in p.models) {
+        val low = m.id.lowercase()
+        if (ignored.none { low.contains(it) } && seen.add(c.providerId to m.id)) {
+            allConfigs.add(c.copy(model = m.id))
         }
-        return FailoverChatModel(candidates)
+    }
+}
+if (allConfigs.size == 1) return buildSingleModel(primary, role, session)
+val candidates = allConfigs.map { cfg -> "${cfg.id}:${cfg.model}" to buildSingleModel(cfg, role, session) }
+return FailoverChatModel(candidates)
     }
 
     /**
