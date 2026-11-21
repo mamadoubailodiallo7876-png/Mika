@@ -1,5 +1,9 @@
 package com.wangzan101.mika.ui
-
+import com.wangzan101.mika.core.cap.plugin.PluginPort
+import com.wangzan101.mika.core.cap.plugin.PluginPortRegistry
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.coroutines.resume
 import android.annotation.SuppressLint
 import android.content.Context
 import android.view.ViewGroup
@@ -829,6 +833,170 @@ OutlinedButton(onClick = {
                     }
                 }
                 item { Spacer(Modifier.height(20.dp)) }
+            }
+        }
+    }
+}
+
+fun registerAndroidPluginPort(context: Context) {
+    val appCtx = context.applicationContext
+    if (PluginPortRegistry.port != null) return
+    val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
+    fun findPlugin(query: String): CreatorPluginItem? {
+        val q = query.trim()
+        if (q.isBlank()) return null
+        val all = scanPlugins(appCtx)
+        return all.firstOrNull { it.id.equals(q, ignoreCase = true) }
+            ?: all.firstOrNull { it.title.equals(q, ignoreCase = true) }
+            ?: all.firstOrNull { it.title.contains(q, ignoreCase = true) }
+    }
+
+    suspend fun evalInPlugin(item: CreatorPluginItem, js: String): String {
+        val res = withTimeoutOrNull(6000L) {
+            suspendCancellableCoroutine<String> { cont ->
+                mainHandler.post {
+                    runCatching {
+                        val wv = PluginWebPool.getOrCreate(appCtx, item)
+                        wv.evaluateJavascript(js) { out ->
+                            if (cont.isActive) cont.resume(out ?: "null")
+                        }
+                    }.onFailure { err ->
+                        if (cont.isActive) cont.resume("ERROR: ${err.message}")
+                    }
+                }
+            }
+        }
+        return res ?: "ERROR: timeout"
+    }
+
+    PluginPortRegistry.port = object : PluginPort {
+        override suspend fun listPlugins(): String {
+            val arr = JSONArray()
+            for (p in scanPlugins(appCtx)) {
+                arr.put(JSONObject().apply {
+                    put("id", p.id)
+                    put("title", p.title)
+                    put("description", p.description)
+                    put("icon", p.icon)
+                    put("running", PluginWebPool.active.containsKey(p.id))
+                    put("is_open", PluginLaunchBus.activeScreenPluginId == p.id)
+                    put("size_kb", (p.indexFile.length() / 1024L).toInt())
+                })
+            }
+            return arr.toString()
+        }
+
+        override suspend fun openPlugin(idOrTitle: String, background: Boolean): String {
+            val found = findPlugin(idOrTitle) ?: return "Plugin introuvable: $idOrTitle"
+            mainHandler.post { PluginWebPool.getOrCreate(appCtx, found) }
+            if (!background) {
+                PluginLaunchBus.pendingOpenId = found.id
+            }
+            return "OK: ${found.title} (${found.id}) ${if (background) "démarré en arrière-plan" else "ouvert à l'écran"}"
+        }
+
+        override suspend fun readPlugin(idOrTitle: String): String {
+            val found = findPlugin(idOrTitle) ?: return "Plugin introuvable: $idOrTitle"
+            val domJs = """
+                (function(){
+                  function sel(el){
+                    if(el.id) return '#' + el.id;
+                    var tag = el.tagName.toLowerCase();
+                    if(el.className && typeof el.className === 'string'){
+                      var cls = el.className.trim().split(/\s+/).filter(Boolean).slice(0,2).join('.');
+                      if(cls) return tag + '.' + cls;
+                    }
+                    return tag;
+                  }
+                  var btns = Array.from(document.querySelectorAll('button,[role=button],.palette-item,.nav-btn,.tab-btn'))
+                    .filter(function(e){ return e.offsetParent !== null; })
+                    .slice(0, 45)
+                    .map(function(e){ return {text:(e.innerText||e.textContent||'').trim().slice(0,60), selector:sel(e)}; });
+                  var inputs = Array.from(document.querySelectorAll('input,textarea,select'))
+                    .filter(function(e){ return e.offsetParent !== null && e.type !== 'hidden' && e.type !== 'file'; })
+                    .slice(0, 25)
+                    .map(function(e){
+                      var o = {selector:sel(e), tag:e.tagName.toLowerCase(), type:e.type||'', placeholder:e.placeholder||'', value:(e.value||'').slice(0,120)};
+                      if(e.tagName==='SELECT') o.options = Array.from(e.options).map(function(x){return x.value+':'+x.text;}).slice(0,12);
+                      return o;
+                    });
+                  var txt = (document.body ? document.body.innerText : '').replace(/\s+/g,' ').trim().slice(0, 1400);
+                  return JSON.stringify({title:document.title, buttons:btns, inputs:inputs, text:txt});
+                })();
+            """.trimIndent()
+            return evalInPlugin(found, domJs)
+        }
+
+        override suspend fun interactPlugin(idOrTitle: String, action: String, selector: String?, text: String?): String {
+            val found = findPlugin(idOrTitle) ?: return "Plugin introuvable: $idOrTitle"
+            val selJson = JSONObject.quote(selector ?: "")
+            val txtJson = JSONObject.quote(text ?: "")
+            val actJson = JSONObject.quote(action)
+            val js = """
+                (function(){
+                  var act = $actJson, sel = $selJson, txt = $txtJson;
+                  var el = sel ? document.querySelector(sel) : null;
+                  if (!el && txt && act === 'click') {
+                    var q = txt.toLowerCase();
+                    var cands = Array.from(document.querySelectorAll('button,a,[role=button],.palette-item,.nav-btn,.tab-btn,label'));
+                    el = cands.find(function(e){ return e.offsetParent !== null && (e.innerText||e.textContent||'').toLowerCase().indexOf(q) !== -1; });
+                  }
+                  if (!el) return JSON.stringify({ok:false, error:'Element introuvable', selector:sel, text:txt});
+                  if (act === 'click') {
+                    el.click();
+                    return JSON.stringify({ok:true, clicked:(el.innerText||el.id||el.tagName).trim().slice(0,60)});
+                  }
+                  if (act === 'type' || act === 'select') {
+                    el.value = txt;
+                    el.dispatchEvent(new Event('input', {bubbles:true}));
+                    el.dispatchEvent(new Event('change', {bubbles:true}));
+                    return JSON.stringify({ok:true, updated:sel, value:txt.slice(0,120)});
+                  }
+                  return JSON.stringify({ok:false, error:'Action inconnue: '+act});
+                })();
+            """.trimIndent()
+            return evalInPlugin(found, js)
+        }
+
+        override suspend fun evalPlugin(idOrTitle: String, js: String): String {
+            val found = findPlugin(idOrTitle) ?: return "Plugin introuvable: $idOrTitle"
+            return evalInPlugin(found, js)
+        }
+
+        override suspend fun managePlugin(
+            action: String,
+            idOrTitle: String?,
+            title: String?,
+            icon: String?,
+            description: String?,
+            html: String?,
+        ): String {
+            return when (action) {
+                "close" -> {
+                    PluginLaunchBus.pendingClose = true
+                    "OK: écran plugin fermé (plugins conservés en arrière-plan)"
+                }
+                "stop" -> {
+                    val found = idOrTitle?.let(::findPlugin) ?: return "Plugin introuvable"
+                    mainHandler.post { PluginWebPool.stop(found.id) }
+                    "OK: ${found.title} arrêté"
+                }
+                "delete" -> {
+                    val found = idOrTitle?.let(::findPlugin) ?: return "Plugin introuvable"
+                    deletePluginEverywhere(appCtx, found.id)
+                    "OK: ${found.title} supprimé"
+                }
+                "create", "update" -> {
+                    val existing = if (action == "update" && !idOrTitle.isNullOrBlank()) findPlugin(idOrTitle) else null
+                    val finalTitle = title?.takeIf { it.isNotBlank() } ?: existing?.title ?: "Plugin"
+                    val finalIcon = icon?.takeIf { it.isNotBlank() } ?: existing?.icon ?: "🧩"
+                    val finalDesc = description ?: existing?.description.orEmpty()
+                    val finalHtml = html?.takeIf { it.isNotBlank() } ?: return "HTML requis"
+                    savePlugin(appCtx, existing, finalTitle, finalIcon, finalDesc, finalHtml)
+                    "OK: $finalTitle enregistré"
+                }
+                else -> "Action inconnue: $action"
             }
         }
     }
