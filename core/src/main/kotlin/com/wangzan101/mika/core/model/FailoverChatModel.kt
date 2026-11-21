@@ -81,6 +81,7 @@ class FailoverChatModel(
             is ModelError.ToolsUnsupported,
             is ModelError.AccountPlanNotAllowed,
             is ModelError.SignInExpired,
+is     ModelError.BadResponse,
             is ModelError.ChatGptNotEligible -> 10 * 60_000L
             else -> 0L
         }
