@@ -88,6 +88,9 @@ private data class CreatorPluginItem(
     val indexFile: File,
     val dir: File,
 )
+object PluginLaunchBus {
+    var pendingOpenId by mutableStateOf<String?>(null)
+}
 
 private object PluginWebPool {
     val active = mutableStateMapOf<String, WebView>()
@@ -300,7 +303,7 @@ private fun scanPlugins(context: Context): List<CreatorPluginItem> {
     return byId.values.toList()
 }
 
-private fun syncPluginsAndProcessAiCommands(context: Context): Boolean {
+fun syncPluginsAndProcessAiCommands(context: Context): Boolean {
     var changed = false
     val workRoot = File(context.filesDir, "sandbox/work")
     val listBefore = scanPlugins(context)
@@ -314,6 +317,20 @@ private fun syncPluginsAndProcessAiCommands(context: Context): Boolean {
                 val action = cmd.optString("action")
                 val id = cmd.optString("id")
                 when (action) {
+                    "open" -> {
+                        val query = cmd.optString("id", cmd.optString("title", "")).trim()
+                        if (query.isNotBlank()) {
+                            val found = scanPlugins(context).firstOrNull {
+                                it.id.equals(query, ignoreCase = true) ||
+                                it.title.equals(query, ignoreCase = true) ||
+                                it.title.contains(query, ignoreCase = true)
+                            }
+                            if (found != null) {
+                                PluginLaunchBus.pendingOpenId = found.id
+                                changed = true
+                            }
+                        }
+                    }
                     "start" -> {
                         val target = listBefore.find { it.id == id }
                         if (target != null) {
@@ -435,6 +452,16 @@ PluginWebPool.fileChooserTrigger = null
 }
     var refreshTick by remember { mutableIntStateOf(0) }
     val plugins = remember(refreshTick) { scanPlugins(context) }
+    LaunchedEffect(PluginLaunchBus.pendingOpenId, plugins) {
+        val targetId = PluginLaunchBus.pendingOpenId
+        if (targetId != null) {
+            val match = plugins.firstOrNull { it.id == targetId }
+            if (match != null) {
+                activePlugin = match
+                PluginLaunchBus.pendingOpenId = null
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         while (true) {
