@@ -14,6 +14,7 @@ import com.wangzan101.mika.core.model.AnthropicModel
 import com.wangzan101.mika.core.model.BearerToken
 import com.wangzan101.mika.core.model.Capabilities
 import com.wangzan101.mika.core.model.Author
+import com.wangzan101.mika.core.model.FailoverChatModel
 import com.wangzan101.mika.core.model.ChatModel
 import com.wangzan101.mika.core.model.ClientHeaders
 import com.wangzan101.mika.core.model.GeminiModel
@@ -562,7 +563,7 @@ class ProviderStore(
      * 记作看图、轻量,服务商和模型是主模型那条配置的。这是 App 里建可调用模型的唯一入口。
      * [session] 是这次调用属于的对话(同一段对话里建的模型都给同一个);服务商声明了会话头的,每个请求都带上它。
      */
-    fun modelFor(role: ModelRole, session: ModelSession = ModelSession.fresh()): ChatModel? = configFor(role)?.let { cfg ->
+    private fun buildSingleModel(cfg: ProviderConfig, role: ModelRole, session: ModelSession): ChatModel {
         val p = provider(cfg.providerId)
         val source = UsageSource(cfg.providerId, p?.name ?: cfg.name, cfg.model, UsagePurpose.of(role))
         val listed = listedOf(cfg)
@@ -571,10 +572,20 @@ class ProviderStore(
             contextTokens = settings.windowTokens ?: cfg.capabilities.contextTokens,
             compactionTriggerTokens = settings.triggerTokens,
         ))
-        modelFactory(configured, apiKey(cfg.id), listed?.endpoint, ClientSetup(
+        return modelFactory(configured, apiKey(cfg.id), listed?.endpoint, ClientSetup(
             headers(p?.sessionHeader, session), reasoningEffort = _roles.value.reasoningEffort(role),
             thinkingTypes = listed?.thinkingTypes, readTimeoutSeconds = settings?.readTimeoutSeconds,
         )).metered(source, usage)
+    }
+
+    fun modelFor(role: ModelRole, session: ModelSession = ModelSession.fresh()): ChatModel? {
+        val primary = configFor(role) ?: return null
+        val others = _configs.value.filter { it.id != primary.id }
+        if (others.isEmpty()) return buildSingleModel(primary, role, session)
+        val candidates = (listOf(primary) + others).map { cfg ->
+            cfg.id to buildSingleModel(cfg, role, session)
+        }
+        return FailoverChatModel(candidates)
     }
 
     /**
