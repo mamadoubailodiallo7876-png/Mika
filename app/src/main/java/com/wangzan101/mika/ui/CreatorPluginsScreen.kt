@@ -432,9 +432,9 @@ fun syncPluginsAndProcessAiCommands(context: Context): Boolean {
             put("title", p.title)
             put("description", p.description)
             put("icon", p.icon)
-            put("running", PluginWebPool.active.containsKey(p.id
+            put("running", PluginWebPool.active.containsKey(p.id))
             put("is_open", PluginLaunchBus.activeScreenPluginId == p.id)
-            put("size_kb", (p.indexFile.length() / 1024L).toInt())))
+            put("size_kb", (p.indexFile.length() / 1024L).toInt())
         })
     }
     workRoot.listFiles()?.forEach { conv ->
