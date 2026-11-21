@@ -15,3 +15,10 @@ terms: ["mode créateur", "creator mode", "plugin", "plugins", "widget", "mini-a
   - **Arrêter** : `{"action": "stop", "id": "<id>"}`
   - **Supprimer** : `{"action": "delete", "id": "<id>"}`
   - **Créer ou modifier** : `{"action": "save", "id": "<id>", "title": "...", "icon": "🧩", "description": "...", "html": "<!DOCTYPE html>..."}`
+## Ouvrir et piloter un plugin natif dans Mika
+- Ne JAMAIS ouvrir un plugin avec Chrome, un navigateur externe ou AI Studio. Les plugins s'ouvrent uniquement dans l'écran intégré « ✨ Plugins » de Mika.
+- Pour lister tous les plugins disponibles, lis `/workspace/plugins/all_plugins.json`.
+- Pour OUVRIR un plugin directement à l'écran depuis le chat, écris ce JSON dans `/workspace/plugins/.cmd.json` :
+- {"action": "open", "id": "<id_ou_nom_du_plugin>"}
+- Mika ouvrira automatiquement l'écran ✨ Plugins et affichera ce plugin en moins de 2 secondes.
+- Autres actions supportées dans `/workspace/plugins/.cmd.json` : `create`, `update`, `stop`, `delete`.
