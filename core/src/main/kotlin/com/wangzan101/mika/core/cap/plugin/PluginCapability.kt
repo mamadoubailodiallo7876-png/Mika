@@ -1,4 +1,6 @@
 package com.wangzan101.mika.core.cap.plugin
+import com.wangzan101.mika.core.capability.PromptEnv
+import com.wangzan101.mika.core.tool.Verb
 
 import com.wangzan101.mika.core.capability.Capability
 import com.wangzan101.mika.core.capability.CapabilityStatus
@@ -41,6 +43,7 @@ private fun requirePort(): PluginPort? = PluginPortRegistry.port
 
 internal object PluginListTool : AgentTool {
     override val capability = PLUGINS_CAP
+    override val verb = Verb.Query
     override val risk = Risk.Read
     override val def = ToolDef(
         "plugin_list",
@@ -58,6 +61,7 @@ internal object PluginListTool : AgentTool {
 
 internal object PluginOpenTool : AgentTool {
     override val capability = PLUGINS_CAP
+    override val verb = Verb.LaunchApp
     override val risk = Risk.Write
     override val def = ToolDef(
         "plugin_open",
@@ -84,6 +88,7 @@ internal object PluginOpenTool : AgentTool {
 
 internal object PluginReadTool : AgentTool {
     override val capability = PLUGINS_CAP
+    override val verb = Verb.ReadPage
     override val risk = Risk.Read
     override val def = ToolDef(
         "plugin_read",
@@ -103,6 +108,7 @@ internal object PluginReadTool : AgentTool {
 
 internal object PluginInteractTool : AgentTool {
     override val capability = PLUGINS_CAP
+    override val verb = Verb.Interact
     override val risk = Risk.Write
     override val def = ToolDef(
         "plugin_interact",
@@ -130,6 +136,7 @@ internal object PluginInteractTool : AgentTool {
 
 internal object PluginEvalTool : AgentTool {
     override val capability = PLUGINS_CAP
+    override val verb = Verb.EvaluateJs
     override val risk = Risk.Write
     override val def = ToolDef(
         "plugin_eval",
@@ -153,6 +160,7 @@ internal object PluginEvalTool : AgentTool {
 
 internal object PluginManageTool : AgentTool {
     override val capability = PLUGINS_CAP
+    override val verb = Verb.SettingsSet
     override val risk = Risk.Write
     override val def = ToolDef(
         "plugin_manage",
@@ -200,6 +208,7 @@ internal object PluginGroup {
 internal class PluginCapability : Capability {
     override val id = PLUGINS_CAP
     override val folds = false
+    override fun sections(env: PromptEnv): List<String> = emptyList()
     override fun status(): CapabilityStatus =
         if (PluginPortRegistry.port != null) CapabilityStatus.Available
         else CapabilityStatus.Unavailable("plugins unavailable")
