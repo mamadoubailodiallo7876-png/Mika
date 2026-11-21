@@ -586,7 +586,7 @@ val seen = baseConfigs.map { it.providerId to it.model }.toMutableSet()
 val ignored = listOf("whisper", "tts", "guard", "prompt-guard", "embed", "audio")
 for (c in baseConfigs.distinctBy { it.providerId }) {
     val p = provider(c.providerId) ?: continue
-    for (m in p.models) {
+    for (m in p.models.orEmpty()) {
         val low = m.id.lowercase()
         if (ignored.none { low.contains(it) } && seen.add(c.providerId to m.id)) {
             allConfigs.add(c.copy(model = m.id))
