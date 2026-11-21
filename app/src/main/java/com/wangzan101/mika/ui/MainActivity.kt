@@ -26,7 +26,8 @@ import androidx.compose.runtime.produceState
 import com.wangzan101.mika.confirm.ConfirmationNotifier
 import com.wangzan101.mika.memory.MemoryRuntime
 import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.runtime.collectAsState
@@ -363,6 +364,16 @@ private fun MikaRoot(
     }
     LaunchedEffect(Unit) {
         if (onboarding == null) Onboarding.start(onboardingInputs())?.let(::goOnboarding)
+    } 
+    val appContext = LocalContext.current
+    LaunchedEffect(Unit) {
+        while (true) {
+            syncPluginsAndProcessAiCommands(appContext)
+            if (PluginLaunchBus.pendingOpenId != null && nav.current != Route.CreatorPlugins) {
+                nav.pushFromDrawer(Route.CreatorPlugins)
+            }
+            delay(1500)
+        }
     }
     val phoneSetupNeeded by phoneSetup.needed.collectAsState()
     // 页面有自己的返回处理时(设置页里的子页、侧栏)由它们先接;这里只管退回上一页
